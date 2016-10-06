@@ -10,6 +10,9 @@ module ThresholdTypes =
     type UsageType =
         |Data
         |SMS
+    type ThresholdType =
+        |Violation
+        |Warning
 
 
     [<Measure>] type pct
@@ -20,7 +23,6 @@ module ThresholdTypes =
     [<Measure>] type tb
     [<Measure>] type msg
 
-    let (%=>) = 1.0<pct>/100.0
     let b = 1L<b>
     let msg = 1L<msg>
 
@@ -29,16 +31,25 @@ module ThresholdTypes =
     let mb_gb = 1<mb>/1024<gb>
     let gb_tb = 1<gb>/1024<tb>
 
-    type ThresholdSettings = {
+    type PerDeviceThresholdSettings = {
         DailyDataThreshold:int64<b>; 
         DailySMSThreshold:int64<msg>; 
         MonthlyDataThreshold:int64<b>;
         MonthlySMSThreshold:int64<msg>;
-        DailyDataPoolPlanThreshold:decimal<pct>;
-        DailySMSPoolPlanThreshold:decimal<pct>;
-        MonthlyDataPoolPlanThreshold:decimal<pct>;
-        MonthlySMSPoolPlanThreshold:decimal<pct>;
-        ThresholdWarning:decimal<pct>;
+        ThresholdWarning:float32;
+        NotificationEmail:string;
+        NotificationSMS:string
+        }
+
+    type PooledPlanThresholdSettings = {
+        DeviceCount: int;
+        BillableDays: int;
+        Commitment: int64<b>;
+        DailyDataThreshold:float32;
+        DailySMSThreshold:float32;
+        MonthlyDataThreshold:float32;
+        MonthlySMSThreshold:float32;
+        ThresholdWarning:float32;
         NotificationEmail:string;
         NotificationSMS:string
         }

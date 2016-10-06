@@ -44,7 +44,8 @@ module ThresholdTypes =
     type PooledPlanThresholdSettings = {
         DeviceCount: int;
         BillableDays: int;
-        Commitment: int64<b>;
+        DataCommitment: int64<b>;
+        SMSCommitment: int64<b>;
         DailyDataThreshold:float32;
         DailySMSThreshold:float32;
         MonthlyDataThreshold:float32;

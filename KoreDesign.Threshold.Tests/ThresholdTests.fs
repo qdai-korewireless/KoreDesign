@@ -67,7 +67,8 @@ module ThresholdTest =
         let settings:PooledPlanThresholdSettings = {
             DeviceCount = 10;
             BillableDays = 30;
-            Commitment = 102400L<b>;
+            DataCommitment = 102400L<b>;
+            SMSCommitment = 100L<b>;
             DailyDataThreshold = 0.5f;
             DailySMSThreshold = 0.5f;
             MonthlyDataThreshold = 0.5f;
@@ -79,18 +80,18 @@ module ThresholdTest =
         [<Test>] member x.
          ``should daily, data, pooled plan sim, threshold breached by set usage value`` ()=
                 let expected = true in
-                let actual = Threshold.pooledPlanThresholdViolated settings Daily Data Violation 101L in
+                let actual = Threshold.pooledPlanThresholdViolated settings Daily Data Violation 17067L in
                 expected |> should equal actual
         [<Test>] member x.
          ``should daily, sms, pooled plan sim, threshold breached by set usage value`` ()=
                 let expected = true in
-                let actual = Threshold.pooledPlanThresholdViolated settings Daily SMS Violation 101L in
+                let actual = Threshold.pooledPlanThresholdViolated settings Daily SMS Violation 17L in
                 expected |> should equal actual
 
           [<Test>] member x.
          ``should monthly, data, pooled plan sim, threshold breached by set usage value`` ()=
                 let expected = true in
-                let actual = Threshold.pooledPlanThresholdViolated settings Monthly Data Violation 101L in
+                let actual = Threshold.pooledPlanThresholdViolated settings Monthly Data Violation 102401L in
                 expected |> should equal actual
                          
           [<Test>] member x.
@@ -101,19 +102,19 @@ module ThresholdTest =
         [<Test>] member x.
          ``should daily, data, pooled plan sim, warning breached by set usage value`` ()=
                 let expected = true in
-                let actual = Threshold.pooledPlanThresholdViolated settings Daily Data Warning 51L in
+                let actual = Threshold.pooledPlanThresholdViolated settings Daily Data Warning 8534L in
                 expected |> should equal actual
 
         [<Test>] member x.
          ``should daily, sms, pooled plan sim, warning breached by set usage value`` ()=
                 let expected = true in
-                let actual = Threshold.pooledPlanThresholdViolated settings Daily SMS Warning 51L in
+                let actual = Threshold.pooledPlanThresholdViolated settings Daily SMS Warning 9L in
                 expected |> should equal actual
 
           [<Test>] member x.
          ``should monthly, data, pooled plan sim, warningbreached by set usage value`` ()=
                 let expected = true in
-                let actual = Threshold.pooledPlanThresholdViolated settings Monthly Data Warning 51L in
+                let actual = Threshold.pooledPlanThresholdViolated settings Monthly Data Warning 51201L in
                 expected |> should equal actual
                          
           [<Test>] member x.

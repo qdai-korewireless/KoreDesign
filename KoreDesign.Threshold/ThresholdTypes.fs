@@ -1,20 +1,7 @@
 ﻿namespace KoreDesign.Threshold
-
+open System
 [<AutoOpen>]
 module ThresholdTypes =
-
-    type ThresholdInterval =
-        |Daily
-        |Monthly
-
-    type UsageType =
-        |Data
-        |SMS
-    type ThresholdType =
-        |Violation
-        |Warning
-
-
     [<Measure>] type pct
     [<Measure>] type b
     [<Measure>] type kb
@@ -22,6 +9,21 @@ module ThresholdTypes =
     [<Measure>] type gb
     [<Measure>] type tb
     [<Measure>] type msg
+
+    type ThresholdInterval =
+        |Daily
+        |Monthly
+
+    type UsageType =
+        |Data of int64<b>
+        |SMS of int64<msg>
+
+    type ThresholdType =
+        |Violation
+        |Warning
+
+
+
 
     let b = 1L<b>
     let msg = 1L<msg>
@@ -54,3 +56,34 @@ module ThresholdTypes =
         NotificationEmail:string;
         NotificationSMS:string
         }
+
+    type DailyAlert = {
+        EnterpriseID:int;
+        SIMTypeID:int;
+        AlertID:int;
+        NumOfSIMs:int;
+        NumOfIncidents:int;
+        UsageType:int;
+        AlertDate:DateTime;
+        ThresholdType:ThresholdType
+    }
+
+    type ThresholdMonitor = {
+        UsageDate:DateTime;
+        SIMID:int;
+        DataTotal:int64<b>;
+        SMSTotal:int64<msg>;
+        DataAlert:DailyAlert option;
+        SMSAlert:DailyAlert option;
+        BillingStartDate:DateTime
+    }
+    
+    type Usage = {
+        MSISDN:int64;
+        IMSI:int;
+        UsageDate:DateTime;
+        Usage:UsageType
+        PLMN:string
+    }
+
+    type MonitorUsage = Usage -> ThresholdMonitor -> ThresholdMonitor

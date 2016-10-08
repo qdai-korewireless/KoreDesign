@@ -2,6 +2,7 @@
 open FsUnit
 open NUnit.Framework
 open KoreDesign.Threshold
+open System
 module ThresholdTest = 
 
    [<TestFixture>]
@@ -122,3 +123,35 @@ module ThresholdTest =
                 let expected = true in
                 let actual = Threshold.pooledPlanThresholdViolated settings Monthly SMS Warning 51L in
                 expected |> should equal actual
+
+   [<TestFixture>]
+    type ``When ThresholdApplyPending is called`` ()=
+        let dummyThresholdMonitor = {
+            UsageDate = DateTime.Today;
+            SIMID = 132;
+            DataTotal = 0L<b>;
+            SMSTotal = 0L<msg>;
+            DataAlert= None;
+            SMSAlert = None;
+            BillingStartDate = new DateTime(2016,10,1)
+        }
+        let dummyUsage = {
+                    MSISDN = "327700019900021";
+                    IMSI = "206012213919390";
+                    UsageDate = new DateTime(2016,10,7);
+                    Usage = DataUsage 0L<b>
+                    PLMN = "BELTB"
+                }
+        [<Test>] member x.
+         ``usage is added to the threshold monitor for new SIM usage`` ()=
+                let expected = 1024L<b> in
+                let usage =  {dummyUsage with Usage = DataUsage 1024L<b>} in
+                let actual = Threshold.monitorUsage dummyThresholdMonitor usage in
+                expected |> should equal actual.DataTotal
+        [<Test>] member x.
+         ``usage is updated to the threshold monitor for existing SIM usage`` ()=
+                let expected = 2048L<b> in
+                let thresholdMonitor = {dummyThresholdMonitor with DataTotal = 1024L<b>} in
+                let usage =  {dummyUsage with Usage = DataUsage 1024L<b>} in
+                let actual = Threshold.monitorUsage thresholdMonitor usage in
+                expected |> should equal actual.DataTotal

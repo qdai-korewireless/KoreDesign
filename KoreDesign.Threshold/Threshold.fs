@@ -40,19 +40,11 @@ module Threshold =
         |Monthly,SMS,Warning -> usage > (getPooledPlanMonthlyCommmitment setting SMS) %% setting.MonthlySMSThreshold %% setting.ThresholdWarning
 
 
-    
     let monitorUsage (monitor:ThresholdMonitor) (usage:Usage) = 
         match usage.Usage with
-            |Data u -> 
+            |DataUsage u -> 
                 {monitor with DataTotal = u + monitor.DataTotal}
-            |SMS u -> 
+            |SMSUsage u -> 
                 {monitor with SMSTotal = u + monitor.SMSTotal}
-//        {
-//            UsageDate = DateTime.Today;
-//            SIMID = 132;
-//            DataTotal = usage.Usage;
-//            SMSTotal = 0L<msg>;
-//            DataAlert= None;
-//            SMSAlert = None;
-//            BillingStartDate = new DateTime(2016,10,1)
-//        }
+                 
+

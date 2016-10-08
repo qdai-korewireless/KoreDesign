@@ -42,6 +42,7 @@
     <Reference Include="System.Numerics" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BindingLib.fs" />
     <Compile Include="ThresholdTypes.fs" />
     <Compile Include="Threshold.fs" />
     <None Include="Script.fsx" />

@@ -15,8 +15,12 @@ module ThresholdTypes =
         |Monthly
 
     type UsageType =
-        |Data of int64<b>
-        |SMS of int64<msg>
+        |Data
+        |SMS
+
+    type UsageTypeUsage =
+        |DataUsage of int64<b> 
+        |SMSUsage of int64<msg> 
 
     type ThresholdType =
         |Violation
@@ -79,10 +83,10 @@ module ThresholdTypes =
     }
     
     type Usage = {
-        MSISDN:int64;
-        IMSI:int;
+        MSISDN:string;
+        IMSI:string;
         UsageDate:DateTime;
-        Usage:UsageType
+        Usage:UsageTypeUsage
         PLMN:string
     }
 

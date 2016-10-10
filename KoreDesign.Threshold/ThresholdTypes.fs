@@ -26,9 +26,6 @@ module ThresholdTypes =
         |Violation
         |Warning
 
-
-
-
     let b = 1L<b>
     let msg = 1L<msg>
 
@@ -37,25 +34,21 @@ module ThresholdTypes =
     let mb_gb = 1<mb>/1024<gb>
     let gb_tb = 1<gb>/1024<tb>
 
-    type PerDeviceThresholdSettings = {
-        DailyDataThreshold:int64<b>; 
-        DailySMSThreshold:int64<msg>; 
-        MonthlyDataThreshold:int64<b>;
-        MonthlySMSThreshold:int64<msg>;
+
+    type PerDeviceThresholdSettings<[<Measure>]'u> = {
+        DailyThreshold:int64<'u>; 
+        MonthlyThreshold:int64<'u>;
         ThresholdWarning:float32;
         NotificationEmail:string;
         NotificationSMS:string
         }
 
-    type PooledPlanThresholdSettings = {
+    type PooledPlanThresholdSettings<[<Measure>]'u> = {
         DeviceCount: int;
         BillableDays: int;
-        DataCommitment: int64<b>;
-        SMSCommitment: int64<b>;
-        DailyDataThreshold:float32;
-        DailySMSThreshold:float32;
-        MonthlyDataThreshold:float32;
-        MonthlySMSThreshold:float32;
+        Commitment: int64<'u>;
+        DailyThreshold:float32;
+        MonthlyThreshold:float32;
         ThresholdWarning:float32;
         NotificationEmail:string;
         NotificationSMS:string
@@ -72,22 +65,23 @@ module ThresholdTypes =
         ThresholdType:ThresholdType
     }
 
-    type ThresholdMonitor = {
+    type ThresholdMonitor<[<Measure>]'u> = {
         UsageDate:DateTime;
         SIMID:int;
-        DataTotal:int64<b>;
-        SMSTotal:int64<msg>;
-        DataAlert:DailyAlert option;
-        SMSAlert:DailyAlert option;
-        BillingStartDate:DateTime
+        UsageTotal:int64<'u>;
+        Alert:DailyAlert option;
+        BillingStartDate:DateTime;
+        PerDeviceThresholdSettings:PerDeviceThresholdSettings<'u>
+        IsThresholdExceeded:bool;
+        UsageType:UsageType
     }
     
-    type Usage = {
+    type Usage<[<Measure>]'u> = {
         MSISDN:string;
         IMSI:string;
         UsageDate:DateTime;
-        Usage:UsageTypeUsage
+        Usage:int64<'u>;
         PLMN:string
     }
 
-    type MonitorUsage = Usage -> ThresholdMonitor -> ThresholdMonitor
+    type MonitorUsage<[<Measure>]'u> = Usage<'u> -> ThresholdMonitor<'u> -> ThresholdMonitor<'u>

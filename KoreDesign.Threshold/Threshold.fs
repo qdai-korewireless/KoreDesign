@@ -1,50 +1,39 @@
 ﻿namespace KoreDesign.Threshold
 open System
+open LanguagePrimitives
+
 module Threshold =
     let daysInMonth = 30
-    let (%%) (threshold:int64<'u>) warning =
-        (int64)((float32)threshold * warning)
+    let (%%) (threshold:int64<'u>) (warning:float32) =
+        Int64WithMeasure ((int64)((float32)threshold * warning))
 
-    let perDeviceThresholdViolated (setting:PerDeviceThresholdSettings) interval usageType thresholdType usage =
-        match (interval,usageType,thresholdType) with
-        |Daily,Data,Violation -> usage * b > setting.DailyDataThreshold
-        |Daily,SMS,Violation -> usage * msg > setting.DailySMSThreshold
-        |Monthly,Data,Violation -> usage * b > setting.MonthlyDataThreshold
-        |Monthly,SMS,Violation -> usage * msg > setting.MonthlySMSThreshold
-        |Daily,Data,Warning -> usage > setting.DailyDataThreshold %% setting.ThresholdWarning
-        |Daily,SMS,Warning -> usage  > setting.DailySMSThreshold %% setting.ThresholdWarning
-        |Monthly,Data,Warning -> usage > setting.MonthlyDataThreshold %% setting.ThresholdWarning
-        |Monthly,SMS,Warning -> usage > setting.MonthlySMSThreshold %% setting.ThresholdWarning
+    let perDeviceThresholdViolated (setting:PerDeviceThresholdSettings<'u>) interval thresholdType (usage:int64<'u>) =
+        match (interval,thresholdType) with
+        |Daily,Violation -> usage > setting.DailyThreshold
+        |Monthly,Violation -> usage > setting.MonthlyThreshold
+        |Daily,Warning -> usage > setting.DailyThreshold %% setting.ThresholdWarning
+        |Monthly,Warning -> usage > setting.MonthlyThreshold %% setting.ThresholdWarning
 
-    let getPooledPlanDailyCommmitment (setting:PooledPlanThresholdSettings) usageType =
-        let commitment = match usageType with
-                            |Data -> setting.DataCommitment 
-                            |SMS -> setting.SMSCommitment 
-        commitment / (int64)daysInMonth * (int64)setting.DeviceCount 
+    let getPooledPlanDailyCommmitment (setting:PooledPlanThresholdSettings<'u>) =
+        setting.Commitment / (int64)daysInMonth * (int64)setting.DeviceCount 
 
-    let getPooledPlanMonthlyCommmitment (setting:PooledPlanThresholdSettings) usageType =
-        let commitment = match usageType with
-                            |Data -> setting.DataCommitment 
-                            |SMS -> setting.SMSCommitment 
-        commitment / (int64)daysInMonth * (int64)setting.BillableDays
+    let getPooledPlanMonthlyCommmitment (setting:PooledPlanThresholdSettings<'u>) =
+        setting.Commitment / (int64)daysInMonth * (int64)setting.BillableDays
 
-    let pooledPlanThresholdViolated (setting:PooledPlanThresholdSettings) interval usageType thresholdType usage =
-        match (interval,usageType,thresholdType) with
-        |Daily,Data,Violation -> usage > (getPooledPlanDailyCommmitment setting Data) %% setting.DailyDataThreshold
-        |Daily,SMS,Violation -> usage > (getPooledPlanDailyCommmitment setting SMS) %% setting.DailySMSThreshold
-        |Monthly,Data,Violation -> usage > (getPooledPlanMonthlyCommmitment setting Data) %% setting.MonthlyDataThreshold
-        |Monthly,SMS,Violation -> usage > (getPooledPlanMonthlyCommmitment setting SMS) %% setting.MonthlySMSThreshold
-        |Daily,Data,Warning -> usage > (getPooledPlanDailyCommmitment setting Data) %% setting.DailyDataThreshold %% setting.ThresholdWarning
-        |Daily,SMS,Warning -> usage  > (getPooledPlanDailyCommmitment setting SMS) %% setting.DailySMSThreshold %% setting.ThresholdWarning
-        |Monthly,Data,Warning -> usage > (getPooledPlanMonthlyCommmitment setting Data) %% setting.MonthlyDataThreshold %% setting.ThresholdWarning
-        |Monthly,SMS,Warning -> usage > (getPooledPlanMonthlyCommmitment setting SMS) %% setting.MonthlySMSThreshold %% setting.ThresholdWarning
+    let pooledPlanThresholdViolated (setting:PooledPlanThresholdSettings<'u>) interval thresholdType usage =
+        match (interval,thresholdType) with
+        |Daily,Violation -> usage > (getPooledPlanDailyCommmitment setting) %% setting.DailyThreshold
+        |Monthly,Violation -> usage > (getPooledPlanMonthlyCommmitment setting) %% setting.MonthlyThreshold
+        |Daily,Warning -> usage > (getPooledPlanDailyCommmitment setting) %% setting.DailyThreshold %% setting.ThresholdWarning
+        |Monthly,Warning -> usage > (getPooledPlanMonthlyCommmitment setting) %% setting.MonthlyThreshold %% setting.ThresholdWarning
 
 
-    let monitorUsage (monitor:ThresholdMonitor) (usage:Usage) = 
-        match usage.Usage with
-            |DataUsage u -> 
-                {monitor with DataTotal = u + monitor.DataTotal}
-            |SMSUsage u -> 
-                {monitor with SMSTotal = u + monitor.SMSTotal}
+    let isUsageExceededDailyThreshold thresholdMonitor usage = 
+        let dailyThreshold = thresholdMonitor.PerDeviceThresholdSettings.DailyThreshold
+        let currentUsage = thresholdMonitor.UsageTotal
+        currentUsage + usage > dailyThreshold
+
+    let monitorUsage (monitor:ThresholdMonitor<'u>) (usage:Usage<'u>) = 
+        {monitor with UsageTotal = usage.Usage + monitor.UsageTotal; IsThresholdExceeded = (isUsageExceededDailyThreshold monitor usage.Usage)}
                  
 

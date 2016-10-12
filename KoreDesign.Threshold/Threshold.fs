@@ -28,12 +28,42 @@ module Threshold =
         |Monthly,Warning -> usage > (getPooledPlanMonthlyCommmitment setting) %% setting.MonthlyThreshold %% setting.ThresholdWarning
 
 
-    let isUsageExceededDailyThreshold thresholdMonitor usage = 
-        let dailyThreshold = thresholdMonitor.PerDeviceThresholdSettings.DailyThreshold
-        let currentUsage = thresholdMonitor.UsageTotal
-        currentUsage + usage > dailyThreshold
+    let getExceededThresholdType (setting:PerDeviceThresholdSettings<'u>) (currUsage:int64<'u>) (newUsage:int64<'u>) = 
+        if currUsage + newUsage > setting.DailyThreshold then
+            Some Violation
+        else if currUsage + newUsage > setting.DailyThreshold %% setting.ThresholdWarning then
+            Some Warning
+        else
+            None
 
-    let monitorUsage (monitor:ThresholdMonitor<'u>) (usage:Usage<'u>) = 
-        {monitor with UsageTotal = usage.Usage + monitor.UsageTotal; IsThresholdExceeded = (isUsageExceededDailyThreshold monitor usage.Usage)}
+    let monitorUsage (monitors:ThresholdMonitor<'u> list) (usage:Usage<'u>) = 
+        let perDeviceThresholdSettings:PerDeviceThresholdSettings<'u> = {
+                                                                        DailyThreshold = Int64WithMeasure 0L; 
+                                                                        MonthlyThreshold= Int64WithMeasure 0L;
+                                                                        ThresholdWarning = 0.5f;
+                                                                        NotificationEmail = "";
+                                                                        NotificationSMS = "";
+                                                                    }
+        
+        let monitor = monitors |> Seq.tryFind (fun m -> m.SIMID = usage.SIMID && m.UsageDate = usage.UsageDate)
+        
+        match monitor with
+        |Some m -> 
+            let remain = monitors |> Seq.filter (fun m -> m.SIMID <> usage.SIMID) |> Seq.toList
+            {
+                m with UsageTotal = usage.Usage + m.UsageTotal; 
+                            ExceededThresholdType = (getExceededThresholdType m.PerDeviceThresholdSettings m.UsageTotal usage.Usage);
+            }::remain
+        |None -> 
+                let newMonitor = {
+                    UsageDate = usage.UsageDate;
+                    SIMID = usage.SIMID;
+                    UsageTotal = usage.Usage;
+                    Alert = None;
+                    BillingStartDate = usage.BillingStartDate;
+                    PerDeviceThresholdSettings = perDeviceThresholdSettings;
+                    ExceededThresholdType = (getExceededThresholdType perDeviceThresholdSettings (Int64WithMeasure 0L) usage.Usage);
+                }
+                newMonitor::monitors
                  
 

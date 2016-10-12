@@ -71,9 +71,8 @@ module ThresholdTypes =
         UsageTotal:int64<'u>;
         Alert:DailyAlert option;
         BillingStartDate:DateTime;
-        PerDeviceThresholdSettings:PerDeviceThresholdSettings<'u>
-        IsThresholdExceeded:bool;
-        UsageType:UsageType
+        PerDeviceThresholdSettings:PerDeviceThresholdSettings<'u>;
+        ExceededThresholdType:ThresholdType option;
     }
     
     type Usage<[<Measure>]'u> = {
@@ -81,7 +80,9 @@ module ThresholdTypes =
         IMSI:string;
         UsageDate:DateTime;
         Usage:int64<'u>;
-        PLMN:string
+        PLMN:string;
+        SIMID: int;
+        BillingStartDate: DateTime;
     }
 
-    type MonitorUsage<[<Measure>]'u> = Usage<'u> -> ThresholdMonitor<'u> -> ThresholdMonitor<'u>
+    type MonitorUsage<[<Measure>]'u> = ThresholdMonitor<'u> list -> Usage<'u> -> ThresholdMonitor<'u>

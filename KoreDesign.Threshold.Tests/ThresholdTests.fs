@@ -93,6 +93,7 @@ module ThresholdTest =
             BillingStartDate = new DateTime(2016,10,1);
             PerDeviceThresholdSettings = pdsetting;
             ExceededThresholdType = None;
+            RunningTotal = 0L<b>
         }
         let dummyUsage = {
             MSISDN = "327700019900021";
@@ -117,3 +118,12 @@ module ThresholdTest =
                 let usage =  {dummyUsage with Usage = 1024L<b>} in
                 let actual = (Threshold.monitorUsage thresholdMonitor usage) |> Seq.find( fun m -> m.SIMID = dummyUsage.SIMID) in
                actual.UsageTotal |> should equal expected
+
+        [<Test>] member x.
+         ``running total is calculated by summing a SIM's previous days usage for current billing period`` ()=
+                let expected = 2048L<b> in
+                let usageDate = new DateTime(2016,10,8) in
+                let thresholdMonitor = [{dummyThresholdMonitor with UsageTotal = 1024L<b>; UsageDate=new DateTime(2016,10,7)};{dummyThresholdMonitor with UsageTotal = 1024L<b>; UsageDate=usageDate}] in
+                let usage =  {dummyUsage with Usage = 1024L<b>; UsageDate=usageDate} in
+                let actual = (Threshold.calculateRunningTotals thresholdMonitor) |> Seq.find( fun m -> m.SIMID = dummyUsage.SIMID && m.UsageDate = usageDate) in
+               actual.RunningTotal |> should equal expected

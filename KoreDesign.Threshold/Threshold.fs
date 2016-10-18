@@ -63,7 +63,14 @@ module Threshold =
                     BillingStartDate = usage.BillingStartDate;
                     PerDeviceThresholdSettings = perDeviceThresholdSettings;
                     ExceededThresholdType = (getExceededThresholdType perDeviceThresholdSettings (Int64WithMeasure 0L) usage.Usage);
+                    RunningTotal = Int64WithMeasure 0L;
                 }
                 newMonitor::monitors
-                 
+
+    let calculateRunningTotals (monitors:ThresholdMonitor<'u> list) =
+        let updated = seq {for m in monitors ->
+                            let filtered = monitors |> Seq.filter (fun i -> i.UsageDate < m.UsageDate && i.SIMID = m.SIMID && i.BillingStartDate = m.BillingStartDate)
+                            let total = filtered |> Seq.sumBy(fun i-> i.UsageTotal)
+                            {m with RunningTotal = m.UsageTotal + total}}
+        updated
 

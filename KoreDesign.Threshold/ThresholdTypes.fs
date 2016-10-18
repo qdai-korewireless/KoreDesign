@@ -73,6 +73,7 @@ module ThresholdTypes =
         BillingStartDate:DateTime;
         PerDeviceThresholdSettings:PerDeviceThresholdSettings<'u>;
         ExceededThresholdType:ThresholdType option;
+        RunningTotal: int64<'u>
     }
     
     type Usage<[<Measure>]'u> = {

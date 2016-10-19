@@ -94,6 +94,8 @@ module ThresholdTest =
             PerDeviceThresholdSettings = pdsetting;
             ExceededThresholdType = None;
             RunningTotal = 0L<b>
+            EnterpriseID = -1;
+            SIMTypeID = SIMTypes.Proximus
         }
         let dummyUsage = {
             MSISDN = "327700019900021";
@@ -103,6 +105,11 @@ module ThresholdTest =
             PLMN = "BELTB"
             SIMID = 123
             BillingStartDate = new DateTime(2016,10,1)
+        }
+        let dummyUsageDate = {
+            EnterpriseID = -1;
+            SIMTypeID = SIMTypes.Proximus;
+            UsageDate = new DateTime(2016,10,7)
         }
         [<Test>] member x.
          ``usage is added to the threshold monitor for SIM usage`` ()=
@@ -127,3 +134,11 @@ module ThresholdTest =
                 let usage =  {dummyUsage with Usage = 1024L<b>; UsageDate=usageDate} in
                 let actual = (Threshold.calculateRunningTotals thresholdMonitor) |> Seq.find( fun m -> m.SIMID = dummyUsage.SIMID && m.UsageDate = usageDate) in
                actual.RunningTotal |> should equal expected
+
+        [<Test>] member x.
+         ``insert usage date if not already exists`` ()=
+                let expected = 3 in
+                let usageDates = [{dummyUsageDate with UsageDate = new DateTime(2016,10,7)};{dummyUsageDate with UsageDate = new DateTime(2016,10,10)}] in
+                let thresholdMonitor = [{dummyThresholdMonitor with UsageTotal = 1024L<b>; UsageDate=new DateTime(2016,10,8)};{dummyThresholdMonitor with UsageTotal = 1024L<b>; UsageDate=new DateTime(2016,10,7)}] in
+                let actual = (Threshold.addUsageDate usageDates thresholdMonitor) |> Seq.length in
+               actual |> should equal expected

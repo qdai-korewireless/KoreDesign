@@ -10,6 +10,10 @@ module ThresholdTypes =
     [<Measure>] type tb
     [<Measure>] type msg
 
+    type SIMTypes =
+    |Proximus
+    |Tango
+
     type ThresholdInterval =
         |Daily
         |Monthly
@@ -73,7 +77,9 @@ module ThresholdTypes =
         BillingStartDate:DateTime;
         PerDeviceThresholdSettings:PerDeviceThresholdSettings<'u>;
         ExceededThresholdType:ThresholdType option;
-        RunningTotal: int64<'u>
+        RunningTotal: int64<'u>;
+        EnterpriseID:int;
+        SIMTypeID:SIMTypes
     }
     
     type Usage<[<Measure>]'u> = {
@@ -84,6 +90,12 @@ module ThresholdTypes =
         PLMN:string;
         SIMID: int;
         BillingStartDate: DateTime;
+    }
+
+    type ThresholdDate = {
+        EnterpriseID:int;
+        SIMTypeID:SIMTypes;
+        UsageDate:DateTime
     }
 
     type MonitorUsage<[<Measure>]'u> = ThresholdMonitor<'u> list -> Usage<'u> -> ThresholdMonitor<'u>

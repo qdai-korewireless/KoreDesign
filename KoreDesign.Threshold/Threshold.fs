@@ -64,6 +64,8 @@ module Threshold =
                     PerDeviceThresholdSettings = perDeviceThresholdSettings;
                     ExceededThresholdType = (getExceededThresholdType perDeviceThresholdSettings (Int64WithMeasure 0L) usage.Usage);
                     RunningTotal = Int64WithMeasure 0L;
+                    EnterpriseID = -1;
+                    SIMTypeID = SIMTypes.Proximus;
                 }
                 newMonitor::monitors
 
@@ -74,3 +76,7 @@ module Threshold =
                             {m with RunningTotal = m.UsageTotal + total}}
         updated
 
+    let addUsageDate (tdates:ThresholdDate list) (monitors:ThresholdMonitor<'u> list) =
+        let u1 = set tdates
+        let u2= set (monitors |> Seq.map (fun m -> {EnterpriseID = m.EnterpriseID;SIMTypeID=m.SIMTypeID;UsageDate = m.UsageDate}))
+        Set.ofSeq (u1 + u2)

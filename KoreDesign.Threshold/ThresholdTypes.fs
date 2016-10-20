@@ -2,13 +2,8 @@
 open System
 [<AutoOpen>]
 module ThresholdTypes =
-    [<Measure>] type pct
-    [<Measure>] type b
-    [<Measure>] type kb
-    [<Measure>] type mb
-    [<Measure>] type gb
-    [<Measure>] type tb
-    [<Measure>] type msg
+    [<Measure>] type data
+    [<Measure>] type sms
 
     type SIMTypes =
     |Proximus
@@ -23,21 +18,12 @@ module ThresholdTypes =
         |SMS
 
     type UsageTypeUsage =
-        |DataUsage of int64<b> 
-        |SMSUsage of int64<msg> 
+        |DataUsage of int64<data> 
+        |SMSUsage of int64<sms> 
 
     type ThresholdType =
         |Violation
         |Warning
-
-    let b = 1L<b>
-    let msg = 1L<msg>
-
-    let b_kb = 1<b>/1024<kb>
-    let kb_mb = 1<kb>/1024<mb>
-    let mb_gb = 1<mb>/1024<gb>
-    let gb_tb = 1<gb>/1024<tb>
-
 
     type PerDeviceThresholdSettings<[<Measure>]'u> = {
         DailyThreshold:int64<'u>; 
@@ -58,13 +44,11 @@ module ThresholdTypes =
         NotificationSMS:string
         }
 
-    type DailyAlert = {
+    type DailyAlert<[<Measure>]'u> = {
         EnterpriseID:int;
-        SIMTypeID:int;
+        SIMTypeID:SIMTypes;
         AlertID:int;
-        NumOfSIMs:int;
-        NumOfIncidents:int;
-        UsageType:int;
+        NumOfIncidents:int<'u>;
         AlertDate:DateTime;
         ThresholdType:ThresholdType
     }
@@ -73,13 +57,13 @@ module ThresholdTypes =
         UsageDate:DateTime;
         SIMID:int;
         UsageTotal:int64<'u>;
-        Alert:DailyAlert option;
         BillingStartDate:DateTime;
         PerDeviceThresholdSettings:PerDeviceThresholdSettings<'u>;
         ExceededThresholdType:ThresholdType option;
+        DailyAlert:DailyAlert<'u> option;
         RunningTotal: int64<'u>;
         EnterpriseID:int;
-        SIMTypeID:SIMTypes
+        SIMTypeID:SIMTypes;
     }
     
     type Usage<[<Measure>]'u> = {

@@ -59,13 +59,13 @@ module Threshold =
                     UsageDate = usage.UsageDate;
                     SIMID = usage.SIMID;
                     UsageTotal = usage.Usage;
-                    Alert = None;
                     BillingStartDate = usage.BillingStartDate;
                     PerDeviceThresholdSettings = perDeviceThresholdSettings;
                     ExceededThresholdType = (getExceededThresholdType perDeviceThresholdSettings (Int64WithMeasure 0L) usage.Usage);
                     RunningTotal = Int64WithMeasure 0L;
                     EnterpriseID = -1;
                     SIMTypeID = SIMTypes.Proximus;
+                    DailyAlert = None
                 }
                 newMonitor::monitors
 
@@ -80,3 +80,16 @@ module Threshold =
         let u1 = set tdates
         let u2= set (monitors |> Seq.map (fun m -> {EnterpriseID = m.EnterpriseID;SIMTypeID=m.SIMTypeID;UsageDate = m.UsageDate}))
         Set.ofSeq (u1 + u2)
+
+    let updateAlert (thresholdType:ThresholdType) (alerts:DailyAlert<'u> list) (monitors:ThresholdMonitor<'u> list) = 
+        let one:int<'u> = Int32WithMeasure 1
+        let max = match alerts with 
+                    |[] -> match thresholdType with | ThresholdType.Violation -> 8000001 |ThresholdType.Warning -> 9000001
+                    | _ ->(alerts |> Seq.maxBy (fun a-> a.AlertID)).AlertID
+        let newAlerts = seq {for m in (monitors |> Seq.filter (fun m -> m.ExceededThresholdType = Some thresholdType))->
+                                let find = alerts |> Seq.tryFind (fun a -> a.AlertDate = m.UsageDate && a.SIMTypeID = m.SIMTypeID && Some a.ThresholdType = m.ExceededThresholdType)
+                                match find with
+                                |Some a -> {a with NumOfIncidents = a.NumOfIncidents + one}
+                                |None -> {AlertDate = m.UsageDate;EnterpriseID = m.EnterpriseID; ThresholdType = thresholdType; SIMTypeID = m.SIMTypeID ;AlertID = max+1;NumOfIncidents = one}
+                                }
+        newAlerts

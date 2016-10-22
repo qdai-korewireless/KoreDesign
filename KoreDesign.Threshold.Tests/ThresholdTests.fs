@@ -159,7 +159,7 @@ module ThresholdTest =
                 let expected = 8000002 in
                 let alerts = [] in
                 let thresholdMonitor = [{dummyThresholdMonitor with UsageTotal = 1024L<data>; UsageDate=new DateTime(2016,10,8); ExceededThresholdType = Some ThresholdType.Violation}] in
-                let actual = (Threshold.updateAlert ThresholdType.Violation alerts thresholdMonitor) |> Seq.head in
+                let actual = (Threshold.updateAlert alerts thresholdMonitor) |> Seq.head in
                actual.AlertID |> should equal expected
 
         [<Test>] member x.
@@ -167,7 +167,7 @@ module ThresholdTest =
                 let expected = 2<data> in
                 let alerts = [{dummyAlert with NumOfIncidents = 1<data>}] in
                 let thresholdMonitor = [{dummyThresholdMonitor with UsageTotal = 1024L<data>; UsageDate=new DateTime(2016,10,7);ExceededThresholdType = Some ThresholdType.Violation; DailyAlert = Some dummyAlert}] in
-                let actual = (Threshold.updateAlert ThresholdType.Violation alerts thresholdMonitor) |> Seq.head in
+                let actual = (Threshold.updateAlert alerts thresholdMonitor) |> Seq.head in
                actual.NumOfIncidents |> should equal expected
 
         [<Test>] member x.

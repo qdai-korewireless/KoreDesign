@@ -89,16 +89,17 @@ module Threshold =
         Set.ofSeq (u1 + u2)
 
     //sprThresholdDailyAlertsUpdate & sprThresholdDailyWarningAlertsUpdate
-    let updateAlert (thresholdType:ThresholdType) (alerts:DailyAlert<'u> list) (monitors:ThresholdMonitor<'u> list) = 
+    let updateAlert (alerts:DailyAlert<'u> list) (monitors:ThresholdMonitor<'u> list) = 
         let one:int<'u> = Int32WithMeasure 1
-        let max = match alerts with 
-                    |[] -> match thresholdType with | ThresholdType.Violation -> 8000001 |ThresholdType.Warning -> 9000001
-                    | _ ->(alerts |> Seq.maxBy (fun a-> a.AlertID)).AlertID
-        let newAlerts = seq {for m in (monitors |> Seq.filter (fun m -> m.ExceededThresholdType = Some thresholdType))->
+
+        let newAlerts = seq {for m in (monitors |> Seq.filter (fun m -> m.ExceededThresholdType <> None))->
+                                let max = match alerts with 
+                                            |[] -> match m.ExceededThresholdType with | Some ThresholdType.Violation -> 8000001 | Some ThresholdType.Warning -> 9000001
+                                            | _ ->(alerts |> Seq.maxBy (fun a-> a.AlertID)).AlertID
                                 let find = alerts |> Seq.tryFind (fun a -> a.AlertDate = m.UsageDate && a.SIMTypeID = m.SIMTypeID && Some a.ThresholdType = m.ExceededThresholdType)
                                 match find with
                                 |Some a -> {a with NumOfIncidents = a.NumOfIncidents + one}
-                                |None -> {AlertDate = m.UsageDate;EnterpriseID = m.EnterpriseID; ThresholdType = thresholdType; SIMTypeID = m.SIMTypeID ;AlertID = max+1;NumOfIncidents = one}
+                                |None -> {AlertDate = m.UsageDate;EnterpriseID = m.EnterpriseID; ThresholdType = m.ExceededThresholdType.Value; SIMTypeID = m.SIMTypeID ;AlertID = max+1;NumOfIncidents = one}
                                 }
         newAlerts
 

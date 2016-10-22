@@ -95,7 +95,7 @@ module ThresholdTest =
             PerDeviceThresholdSettings = pdsetting;
             ExceededThresholdType = None;
             RunningTotal = 0L<data>
-            EnterpriseID = -1;
+            EnterpriseID = 123456;
             SIMTypeID = SIMTypes.Proximus;
             DailyAlert = None;
         }
@@ -109,7 +109,7 @@ module ThresholdTest =
             BillingStartDate = new DateTime(2016,10,1)
         }
         let dummyUsageDate = {
-            EnterpriseID = -1;
+            EnterpriseID = 123456;
             SIMTypeID = SIMTypes.Proximus;
             UsageDate = new DateTime(2016,10,7)
         }
@@ -169,3 +169,11 @@ module ThresholdTest =
                 let thresholdMonitor = [{dummyThresholdMonitor with UsageTotal = 1024L<data>; UsageDate=new DateTime(2016,10,7);ExceededThresholdType = Some ThresholdType.Violation; DailyAlert = Some dummyAlert}] in
                 let actual = (Threshold.updateAlert ThresholdType.Violation alerts thresholdMonitor) |> Seq.head in
                actual.NumOfIncidents |> should equal expected
+
+        [<Test>] member x.
+         ``when monitored usage exceed threshold, alert should be assigned`` ()=
+                let expected = 8000001 in
+                let alerts = [dummyAlert] in
+                let thresholdMonitor = [{dummyThresholdMonitor with ExceededThresholdType = Some ThresholdType.Violation}] in
+                let actual = (Threshold.updateMonitorAlert (new DateTime(2016,10,7)) alerts thresholdMonitor) |> Seq.head in
+               actual.DailyAlert.Value.AlertID |> should equal expected

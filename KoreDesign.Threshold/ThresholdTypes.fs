@@ -48,7 +48,7 @@ module ThresholdTypes =
         EnterpriseID:int;
         SIMTypeID:SIMTypes;
         AlertID:int;
-        NumOfIncidents:int<'u>;
+        NumOfIncidents:int<'u>; //There is NumOfSIMs field in proc, but I can't find difference from NumOfIncidents calculation
         AlertDate:DateTime;
         ThresholdType:ThresholdType
     }

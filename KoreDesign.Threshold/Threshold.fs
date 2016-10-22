@@ -3,6 +3,9 @@ open System
 open LanguagePrimitives
 
 module Threshold =
+
+    (*************** Threshold Service - Core Threshold Calculation ***************)
+
     let daysInMonth = 30
     let (%%) (threshold:int64<'u>) (warning:float32) =
         Int64WithMeasure ((int64)((float32)threshold * warning))
@@ -27,7 +30,8 @@ module Threshold =
         |Daily,Warning -> usage > (getPooledPlanDailyCommmitment setting) %% setting.DailyThreshold %% setting.ThresholdWarning
         |Monthly,Warning -> usage > (getPooledPlanMonthlyCommmitment setting) %% setting.MonthlyThreshold %% setting.ThresholdWarning
 
-
+    (*************** Threshold Service - ThresholdApplyPending analysis ***************)
+    
     let getExceededThresholdType (setting:PerDeviceThresholdSettings<'u>) (currUsage:int64<'u>) (newUsage:int64<'u>) = 
         if currUsage + newUsage > setting.DailyThreshold then
             Some Violation
@@ -35,7 +39,8 @@ module Threshold =
             Some Warning
         else
             None
-
+    
+    //sprThresholdMonitoringUpdateUsage
     let monitorUsage (monitors:ThresholdMonitor<'u> list) (usage:Usage<'u>) = 
         let perDeviceThresholdSettings:PerDeviceThresholdSettings<'u> = {
                                                                         DailyThreshold = Int64WithMeasure 0L; 
@@ -68,7 +73,8 @@ module Threshold =
                     DailyAlert = None
                 }
                 newMonitor::monitors
-
+    
+    //sprThresholdMonitoringRunningTotalsUpdate
     let calculateRunningTotals (monitors:ThresholdMonitor<'u> list) =
         let updated = seq {for m in monitors ->
                             let filtered = monitors |> Seq.filter (fun i -> i.UsageDate < m.UsageDate && i.SIMID = m.SIMID && i.BillingStartDate = m.BillingStartDate)
@@ -76,11 +82,13 @@ module Threshold =
                             {m with RunningTotal = m.UsageTotal + total}}
         updated
 
+    //sprThresholdDateInsertNew
     let addUsageDate (tdates:ThresholdDate list) (monitors:ThresholdMonitor<'u> list) =
         let u1 = set tdates
         let u2= set (monitors |> Seq.map (fun m -> {EnterpriseID = m.EnterpriseID;SIMTypeID=m.SIMTypeID;UsageDate = m.UsageDate}))
         Set.ofSeq (u1 + u2)
 
+    //sprThresholdDailyAlertsUpdate & sprThresholdDailyWarningAlertsUpdate
     let updateAlert (thresholdType:ThresholdType) (alerts:DailyAlert<'u> list) (monitors:ThresholdMonitor<'u> list) = 
         let one:int<'u> = Int32WithMeasure 1
         let max = match alerts with 
@@ -93,3 +101,14 @@ module Threshold =
                                 |None -> {AlertDate = m.UsageDate;EnterpriseID = m.EnterpriseID; ThresholdType = thresholdType; SIMTypeID = m.SIMTypeID ;AlertID = max+1;NumOfIncidents = one}
                                 }
         newAlerts
+
+    //sprThresholdMonitoringUpdateDailyAlertIds
+    let updateMonitorAlert (todayDate:DateTime) (alerts:DailyAlert<'u> list) (monitors:ThresholdMonitor<'u> list) = 
+        let newMonitors = seq {
+                                for m in (monitors |> Seq.filter (fun m -> m.ExceededThresholdType <> None && m.DailyAlert = None)) ->
+                                    let alert = alerts |> Seq.tryFind (fun a -> a.EnterpriseID = m.EnterpriseID && Some a.ThresholdType = m.ExceededThresholdType && a.AlertDate = todayDate)
+                                    match alert with
+                                    |Some a -> {m with DailyAlert = Some a}
+                                    |None -> m
+                            }
+        newMonitors

@@ -46,7 +46,7 @@ module ThresholdTypes =
 
     type DailyAlert<[<Measure>]'u> = {
         EnterpriseID:int;
-        SIMTypeID:SIMTypes;
+        SIMType:SIMTypes;
         AlertID:int;
         NumOfIncidents:int<'u>; //There is NumOfSIMs field in proc, but I can't find difference from NumOfIncidents calculation
         AlertDate:DateTime;
@@ -63,7 +63,7 @@ module ThresholdTypes =
         DailyAlert:DailyAlert<'u> option;
         RunningTotal: int64<'u>;
         EnterpriseID:int;
-        SIMTypeID:SIMTypes;
+        SIMType:SIMTypes;
     }
     
     type Usage<[<Measure>]'u> = {
@@ -78,8 +78,19 @@ module ThresholdTypes =
 
     type ThresholdDate = {
         EnterpriseID:int;
-        SIMTypeID:SIMTypes;
+        SIMType:SIMTypes;
         UsageDate:DateTime
+    }
+
+    type ThresholdSummary<[<Measure>]'u> = {
+        SIMID:int;
+        SIMType:SIMTypes;
+        EnterpriseID:int;
+        BillingStartDate:DateTime;
+        DaysTracked:int<'u>;
+        DaysExceeded:int<'u>;
+        MonthTotal:int64<'u>;
+        ExceededMonthlyThresholdType:ThresholdType option
     }
 
     type MonitorUsage<[<Measure>]'u> = ThresholdMonitor<'u> list -> Usage<'u> -> ThresholdMonitor<'u>

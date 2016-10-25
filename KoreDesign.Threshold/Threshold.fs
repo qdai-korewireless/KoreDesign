@@ -94,19 +94,24 @@ module Threshold =
         Set.toSeq (u1 + u2)
 
     //sprThresholdDailyAlertsUpdate & sprThresholdDailyWarningAlertsUpdate
-    let updateAlert (alerts:DailyAlert<'u> list) (monitors:ThresholdMonitor<'u> list) = 
+    let rec updateAlert (alerts:DailyAlert<'u> list) (monitors:ThresholdMonitor<'u> list) = 
         let one:int<'u> = Int32WithMeasure 1
-
-        let newAlerts = seq {for m in (monitors |> Seq.filter (fun m -> m.ExceededThresholdType <> None))->
-                                let max = match alerts with 
-                                            |[] -> match m.ExceededThresholdType with | Some ThresholdType.Violation -> 8000001 | Some ThresholdType.Warning -> 9000001
-                                            | _ ->(alerts |> Seq.maxBy (fun a-> a.AlertID)).AlertID
-                                let find = alerts |> Seq.tryFind (fun a -> a.AlertDate = m.UsageDate && a.SIMType = m.SIMType && Some a.ThresholdType = m.ExceededThresholdType)
-                                match find with
-                                |Some a -> {a with NumOfIncidents = a.NumOfIncidents + one}
-                                |None -> {AlertDate = m.UsageDate;EnterpriseID = m.EnterpriseID; ThresholdType = m.ExceededThresholdType.Value; SIMType = m.SIMType ;AlertID = max+1;NumOfIncidents = one}
-                                }
-        newAlerts
+        let exceededMonitors = monitors |> Seq.filter (fun m -> m.ExceededThresholdType <> None) |> Seq.toList
+        match exceededMonitors with
+        |m::rem_monitors -> 
+            let alert = alerts |> Seq.tryFind (fun a -> a.AlertDate = m.UsageDate && a.SIMType = m.SIMType && Some a.ThresholdType = m.ExceededThresholdType)
+            let max = match alerts with 
+                        |[] -> match m.ExceededThresholdType with | Some ThresholdType.Violation -> 8000001 | Some ThresholdType.Warning -> 9000001
+                        | _ ->(alerts |> Seq.maxBy (fun a-> a.AlertID)).AlertID
+            match alert with
+            |Some a -> 
+                let rem_alerts = alerts |> Seq.filter (fun i -> i <> a) |>Seq.toList
+                let newAlert = {a with NumOfIncidents = a.NumOfIncidents + one}
+                updateAlert (newAlert::rem_alerts) rem_monitors
+            |None -> 
+                let newAlert = {AlertDate = m.UsageDate;EnterpriseID = m.EnterpriseID; ThresholdType = m.ExceededThresholdType.Value; SIMType = m.SIMType ;AlertID = max+1;NumOfIncidents = one}
+                updateAlert (newAlert::alerts) rem_monitors
+        |[] -> alerts
 
     //sprThresholdMonitoringUpdateDailyAlertIds
     let updateMonitorAlert (todayDate:DateTime) (alerts:DailyAlert<'u> list) (monitors:ThresholdMonitor<'u> list) = 
@@ -119,23 +124,18 @@ module Threshold =
                             }
         newMonitors
     //sprThresholdSummaryMerge
-    let updateThresholdSummary (summaries:ThresholdSummary<'u> list) (monitors:ThresholdMonitor<'u> list) =
+    let rec updateThresholdSummary (summaries:ThresholdSummary<'u> list) (monitors:ThresholdMonitor<'u> list) =
         let zero = Int32WithMeasure 0
         let zero64 = Int64WithMeasure 0L
-        let newSummaries = seq {
-                                    for m in monitors ->
-                                        let summary = summaries |> Seq.tryFind (fun s -> m.SIMID = s.SIMID && m.BillingStartDate = s.BillingStartDate && m.EnterpriseID = s.EnterpriseID)
-                                        match summary with
-                                        |Some s -> {s with MonthTotal = s.MonthTotal + m.UsageTotal;ExceededMonthlyThresholdType = (getExceededThresholdType m.PerDeviceThresholdSettings ThresholdInterval.Monthly (s.MonthTotal + m.UsageTotal))}
-                                        |None -> {SIMID = m.SIMID; SIMType = m.SIMType;EnterpriseID = m.EnterpriseID; BillingStartDate=m.BillingStartDate;DaysTracked = zero; DaysExceeded = zero; MonthTotal = zero64;ExceededMonthlyThresholdType = (getExceededThresholdType m.PerDeviceThresholdSettings ThresholdInterval.Monthly m.UsageTotal)}
-                                }
-
-        let updateExisting = seq{for s in summaries -> 
-                                    let summary = newSummaries |> Seq.tryFind (fun ns -> ns.SIMID = s.SIMID && ns.BillingStartDate = s.BillingStartDate && ns.EnterpriseID = s.EnterpriseID)
-                                    match summary with
-                                    |Some ns -> ns
-                                    |None -> s
-                                    }
-        let unionSet = (set updateExisting) + (set newSummaries)
-        Set.toSeq unionSet
-
+        match monitors with
+        |m::rem_monitors -> 
+            let summary = summaries |> Seq.tryFind (fun s -> m.SIMID = s.SIMID && m.BillingStartDate = s.BillingStartDate && m.EnterpriseID = s.EnterpriseID)
+            match summary with
+            |Some s -> 
+                let rem_summaries = summaries |> Seq.filter (fun i -> i <> s) |>Seq.toList
+                let newSummary = {s with MonthTotal = s.MonthTotal + m.UsageTotal;ExceededMonthlyThresholdType = (getExceededThresholdType m.PerDeviceThresholdSettings ThresholdInterval.Monthly (s.MonthTotal + m.UsageTotal))}
+                updateThresholdSummary (newSummary::rem_summaries) rem_monitors
+            |None -> 
+                let newSummary = {SIMID = m.SIMID; SIMType = m.SIMType;EnterpriseID = m.EnterpriseID; BillingStartDate=m.BillingStartDate;DaysTracked = zero; DaysExceeded = zero; MonthTotal = zero64;ExceededMonthlyThresholdType = (getExceededThresholdType m.PerDeviceThresholdSettings ThresholdInterval.Monthly m.UsageTotal)}
+                updateThresholdSummary (newSummary::summaries) rem_monitors
+        |[] -> summaries

@@ -139,3 +139,22 @@ module Threshold =
                 let newSummary = {SIMID = m.SIMID; SIMType = m.SIMType;EnterpriseID = m.EnterpriseID; BillingStartDate=m.BillingStartDate;DaysTracked = zero; DaysExceeded = zero; MonthTotal = zero64;ExceededMonthlyThresholdType = (getExceededThresholdType m.PerDeviceThresholdSettings ThresholdInterval.Monthly m.UsageTotal)}
                 updateThresholdSummary (newSummary::summaries) rem_monitors
         |[] -> summaries
+
+    //sprThresholdSummaryPerDayUpdate
+    let rec updateThresholdSummaryPerDay (summaries:ThresholdSummaryPerDay<'u> list) (monitors:ThresholdMonitor<'u> list) =
+        let zero = Int32WithMeasure 0
+        let zero64 = Int64WithMeasure 0L
+        match monitors with
+        |m::rem_monitors -> 
+            let summary = summaries |> Seq.tryFind (fun s -> m.UsageDate = s.UsageDate && m.BillingStartDate = s.BillingStartDate && m.EnterpriseID = s.EnterpriseID && m.SIMType = m.SIMType)
+            let runningTotal = summaries |> Seq.filter (fun os -> os.UsageDate<=m.UsageDate && os.SIMType = m.SIMType && os.EnterpriseID = m.EnterpriseID && os.BillingStartDate = m.BillingStartDate)
+                                |> Seq.sumBy (fun os -> os.UsageTotal)
+            match summary with
+            |Some s -> 
+                let rem_summaries = summaries |> Seq.filter (fun i -> i <> s) |>Seq.toList
+                let newSummary = {s with UsageTotal = s.UsageTotal + m.UsageTotal; RunningTotal = m.UsageTotal + runningTotal}
+                updateThresholdSummaryPerDay (newSummary::rem_summaries) rem_monitors
+            |None -> 
+                let newSummary = {UsageDate = m.UsageDate; SIMType = m.SIMType;EnterpriseID = m.EnterpriseID; BillingStartDate=m.BillingStartDate;UsageTotal = m.UsageTotal;RunningTotal = m.UsageTotal + runningTotal}
+                updateThresholdSummaryPerDay (newSummary::summaries) rem_monitors
+        |[] -> summaries

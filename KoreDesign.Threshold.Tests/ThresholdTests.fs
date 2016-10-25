@@ -131,6 +131,14 @@ module ThresholdTest =
             MonthTotal = 0L<data>;
             ExceededMonthlyThresholdType = Some ThresholdType.Violation        
         }
+        let dummySummaryByDay = {
+            UsageDate = new DateTime(2016,10,7);
+            SIMType = SIMTypes.Proximus;
+            EnterpriseID = 123456;
+            BillingStartDate = new DateTime(2016,10,1);
+            UsageTotal = 0L<data>;
+            RunningTotal = 0L<data>;
+        }
         [<Test>] member x.
          ``usage is added to the threshold monitor for SIM usage`` ()=
                 let expected = 1024L<data> in
@@ -217,3 +225,25 @@ module ThresholdTest =
                 let summary = [{dummySummary with MonthTotal = 1024L<data>}] in
                 let actual = (Threshold.updateThresholdSummary summary thresholdMonitor) |> Seq.head in
                actual.ExceededMonthlyThresholdType |> should equal expected
+        [<Test>] member x.
+         ``when summary by day does not have new SIM usage, then add it`` ()=
+                let expected = 1 in
+                let thresholdMonitor = [dummyThresholdMonitor] in
+                let summary = [] in
+                let actual = (Threshold.updateThresholdSummaryPerDay summary thresholdMonitor) |> Seq.length in
+               actual |> should equal expected
+
+        [<Test>] member x.
+         ``when summary by day has existing usage on a date, then add usage`` ()=
+                let expected = 2048L<data> in
+                let thresholdMonitor = [{dummyThresholdMonitor with UsageTotal = 1024L<data>}] in
+                let summary = [{dummySummaryByDay with UsageTotal = 1024L<data>; RunningTotal = 1024L<data>}] in
+                let actual = (Threshold.updateThresholdSummaryPerDay summary thresholdMonitor) |> Seq.head in
+               actual.UsageTotal |> should equal expected
+        [<Test>] member x.
+         ``when summary by day has existing usage on a date, then running total is updated`` ()=
+                let expected = 3072L<data> in
+                let thresholdMonitor = [{dummyThresholdMonitor with UsageTotal = 1024L<data>}] in
+                let summary = [{dummySummaryByDay with UsageTotal = 1024L<data>};{dummySummaryByDay with UsageTotal = 1024L<data>;UsageDate=new DateTime(2016,10,2)}] in
+                let actual = (Threshold.updateThresholdSummaryPerDay summary thresholdMonitor) |> Seq.head in
+               actual.RunningTotal |> should equal expected

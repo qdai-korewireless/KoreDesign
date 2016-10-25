@@ -53,6 +53,15 @@ module ThresholdTypes =
         ThresholdType:ThresholdType
     }
 
+    type MonthlyAlert<[<Measure>]'u> = {
+        EnterpriseID:int;
+        AlertID:int;
+        NumOfSIMs:int<'u>; 
+        AlertDate:DateTime;
+        ThresholdType:ThresholdType;
+        BillingStartDate:DateTime
+    }
+
     type ThresholdMonitor<[<Measure>]'u> = {
         UsageDate:DateTime;
         SIMID:int;

@@ -139,6 +139,14 @@ module ThresholdTest =
             UsageTotal = 0L<data>;
             RunningTotal = 0L<data>;
         }
+        let dummyMonthlyAlert = {
+            EnterpriseID = 123456;
+            AlertID = 8010001;
+            NumOfSIMs = 0<data>;
+            AlertDate = new DateTime(2016,10,7);
+            BillingStartDate = new DateTime(2016,10,1);
+            ThresholdType = ThresholdType.Violation
+        }
         [<Test>] member x.
          ``usage is added to the threshold monitor for SIM usage`` ()=
                 let expected = 1024L<data> in
@@ -247,3 +255,27 @@ module ThresholdTest =
                 let summary = [{dummySummaryByDay with UsageTotal = 1024L<data>};{dummySummaryByDay with UsageTotal = 1024L<data>;UsageDate=new DateTime(2016,10,2)}] in
                 let actual = (Threshold.updateThresholdSummaryPerDay summary thresholdMonitor) |> Seq.head in
                actual.RunningTotal |> should equal expected
+
+
+        [<Test>] member x.
+         ``insert new monthly alert when the usage exceed threshold violation for the first time of a compony today`` ()=
+                let expected = 1 in
+                let alerts = [] in
+                let summary = [{dummySummary with MonthTotal = 1024L<data>; ExceededMonthlyThresholdType = Some ThresholdType.Violation}] in
+                let actual = (Threshold.updateMonthlyAlert alerts summary (new DateTime(2016,10,7))) |> Seq.length in
+               actual |> should equal expected
+
+        [<Test>] member x.
+         ``increase alert monthly SIMs count if SIM for the company exceeds threshold violation`` ()=
+                let expected = 2 in
+                let alerts = [{dummyMonthlyAlert with NumOfSIMs = 1<data>}] in
+                let summary = [{dummySummary with MonthTotal = 1024L<data>; ExceededMonthlyThresholdType = Some ThresholdType.Violation}] in
+                let actual = (Threshold.updateMonthlyAlert alerts summary (new DateTime(2016,10,7))) |> Seq.head in
+               actual.NumOfSIMs |> should equal expected
+        [<Test>] member x.
+         ``when monitored usage exceed monthly threshold, alert id should be assigned`` ()=
+                let expected = 8010002 in
+                let alerts = [dummyMonthlyAlert] in
+                let summary = [{dummySummary with MonthTotal = 1024L<data>; ExceededMonthlyThresholdType = Some ThresholdType.Violation}] in
+                let actual = (Threshold.updateMonthlyAlert alerts summary (new DateTime(2016,10,8))) |> Seq.head in
+               actual.AlertID |> should equal expected

@@ -100,6 +100,7 @@ module ThresholdTypes =
         DaysExceeded:int<'u>;
         MonthTotal:int64<'u>;
         ExceededMonthlyThresholdType:ThresholdType option
+        MonthlyAlert:MonthlyAlert<'u> option
     }
 
     type ThresholdSummaryPerDay<[<Measure>]'u> = {
@@ -108,6 +109,12 @@ module ThresholdTypes =
         EnterpriseID:int
         UsageTotal:int64<'u>
         RunningTotal:int64<'u>
+        BillingStartDate:DateTime
+    }
+
+    type ThresholdMonthlyMonitor<[<Measure>]'u> ={
+        SIMID:int
+        MonthlyAlert:MonthlyAlert<'u>
         BillingStartDate:DateTime
     }
     type MonitorUsage<[<Measure>]'u> = ThresholdMonitor<'u> list -> Usage<'u> -> ThresholdMonitor<'u>

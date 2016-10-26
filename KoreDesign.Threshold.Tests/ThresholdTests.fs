@@ -129,7 +129,8 @@ module ThresholdTest =
             DaysTracked = 0<data>;
             DaysExceeded = 0<data>;
             MonthTotal = 0L<data>;
-            ExceededMonthlyThresholdType = Some ThresholdType.Violation        
+            ExceededMonthlyThresholdType = Some ThresholdType.Violation
+            MonthlyAlert = None    
         }
         let dummySummaryByDay = {
             UsageDate = new DateTime(2016,10,7);
@@ -146,6 +147,11 @@ module ThresholdTest =
             AlertDate = new DateTime(2016,10,7);
             BillingStartDate = new DateTime(2016,10,1);
             ThresholdType = ThresholdType.Violation
+        }
+        let dummyMonthlyMonitor = {
+            SIMID = 123
+            MonthlyAlert = dummyMonthlyAlert
+            BillingStartDate = new DateTime(2016,10,1)
         }
         [<Test>] member x.
          ``usage is added to the threshold monitor for SIM usage`` ()=
@@ -279,3 +285,21 @@ module ThresholdTest =
                 let summary = [{dummySummary with MonthTotal = 1024L<data>; ExceededMonthlyThresholdType = Some ThresholdType.Violation}] in
                 let actual = (Threshold.updateMonthlyAlert alerts summary (new DateTime(2016,10,8))) |> Seq.head in
                actual.AlertID |> should equal expected
+
+
+        [<Test>] member x.
+         ``insert new monthly monitor when the usage exceed threshold violation for SIM`` ()=
+                let expected = 1 in
+                let monitors = [] in
+                let summary = [{dummySummary with MonthTotal = 1024L<data>; ExceededMonthlyThresholdType = Some ThresholdType.Violation}] in
+                let alerts = [dummyMonthlyAlert] in
+                let actual = (Threshold.insertThresholdMonthlyMonitor monitors summary alerts (new DateTime(2016,10,7))) |> Seq.length in
+               actual |> should equal expected
+
+        [<Test>] member x.
+         ``when monthly alert raised, summary should be updated with the alert`` ()=
+                let expected = 8010001 in
+                let monitor = [dummyMonthlyMonitor] in
+                let summary = [{dummySummary with MonthTotal = 1024L<data>; ExceededMonthlyThresholdType = Some ThresholdType.Violation}] in
+                let actual = (Threshold.updateMonthlyAlertForSummary summary monitor) |> Seq.head in
+               actual.MonthlyAlert.Value.AlertID |> should equal expected

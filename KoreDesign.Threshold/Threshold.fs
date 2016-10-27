@@ -1,15 +1,15 @@
 ﻿namespace KoreDesign.Threshold
 open System
 open LanguagePrimitives
+open ThresholdTypes
 
 module Threshold =
 
     (*************** Threshold Service - Core Threshold Calculation ***************)
 
-    let daysInMonth = 30
+    
 
-    let (%%) (threshold:int64<'u>) (warning:float32) =
-        Int64WithMeasure ((int64)((float32)threshold * warning))
+
 
     let perDeviceThresholdViolated (setting:PerDeviceThresholdSettings<'u>) interval thresholdType (usage:int64<'u>) =
         match (interval,thresholdType) with
@@ -18,18 +18,6 @@ module Threshold =
         |Daily,Warning -> usage > setting.DailyThreshold %% setting.ThresholdWarning
         |Monthly,Warning -> usage > setting.MonthlyThreshold %% setting.ThresholdWarning
 
-    let getPooledPlanDailyCommmitment (setting:PooledPlanThresholdSettings<'u>) =
-        setting.Commitment / (int64)daysInMonth * (int64)setting.DeviceCount 
-
-    let getPooledPlanMonthlyCommmitment (setting:PooledPlanThresholdSettings<'u>) =
-        setting.Commitment / (int64)daysInMonth * (int64)setting.BillableDays
-
-    let pooledPlanThresholdViolated (setting:PooledPlanThresholdSettings<'u>) interval thresholdType usage =
-        match (interval,thresholdType) with
-        |Daily,Violation -> usage > (getPooledPlanDailyCommmitment setting) %% setting.DailyThreshold
-        |Monthly,Violation -> usage > (getPooledPlanMonthlyCommmitment setting) %% setting.MonthlyThreshold
-        |Daily,Warning -> usage > (getPooledPlanDailyCommmitment setting) %% setting.DailyThreshold %% setting.ThresholdWarning
-        |Monthly,Warning -> usage > (getPooledPlanMonthlyCommmitment setting) %% setting.MonthlyThreshold %% setting.ThresholdWarning
 
     (*************** Threshold Service - ThresholdApplyPending analysis ***************)
     
@@ -147,7 +135,7 @@ module Threshold =
     let rec updateThresholdSummaryPerDay (summaries:ThresholdSummaryPerDay<'u> list) (monitors:ThresholdMonitor<'u> list) =
         match monitors with
         |m::rem_monitors -> 
-            let summary = summaries |> Seq.tryFind (fun s -> m.UsageDate = s.UsageDate && m.BillingStartDate = s.BillingStartDate && m.EnterpriseID = s.EnterpriseID && m.SIMType = m.SIMType)
+            let summary = summaries |> Seq.tryFind (fun s -> m.UsageDate = s.UsageDate && m.BillingStartDate = s.BillingStartDate && m.EnterpriseID = s.EnterpriseID && m.SIMType = s.SIMType)
             let runningTotal = summaries |> Seq.filter (fun os -> os.UsageDate<=m.UsageDate && os.SIMType = m.SIMType && os.EnterpriseID = m.EnterpriseID && os.BillingStartDate = m.BillingStartDate)
                                 |> Seq.sumBy (fun os -> os.UsageTotal)
             match summary with
@@ -187,7 +175,7 @@ module Threshold =
         match todayAlerts with
         |a::rem_alerts -> 
             let sims = exceededSummaries |> Seq.filter (fun s -> Some a.ThresholdType = s.ExceededMonthlyThresholdType && a.BillingStartDate = s.BillingStartDate && a.EnterpriseID = s.EnterpriseID)
-            let newMonitors = sims |> Seq.map (fun s -> {SIMID = s.SIMID;MonthlyAlert = a;BillingStartDate=a.BillingStartDate}) |> Seq.toList
+            let newMonitors:ThresholdMonthlyMonitor<'u> list = sims |> Seq.map (fun s -> {SIMID = s.SIMID;MonthlyAlert = a;BillingStartDate=s.BillingStartDate}) |> Seq.toList
             insertThresholdMonthlyMonitor (newMonitors @ monitors) summaries rem_alerts today
         |[] -> monitors
 

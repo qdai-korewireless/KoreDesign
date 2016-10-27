@@ -1,44 +1,11 @@
 ﻿namespace KoreDesign.Threshold
 open System
-[<AutoOpen>]
 module ThresholdTypes =
-    [<Measure>] type data
-    [<Measure>] type sms
 
-    type SIMTypes =
-    |Proximus
-    |Tango
-
-    type ThresholdInterval =
-        |Daily
-        |Monthly
-
-    type UsageType =
-        |Data
-        |SMS
-
-    type UsageTypeUsage =
-        |DataUsage of int64<data> 
-        |SMSUsage of int64<sms> 
-
-    type ThresholdType =
-        |Violation
-        |Warning
 
     type PerDeviceThresholdSettings<[<Measure>]'u> = {
         DailyThreshold:int64<'u>; 
         MonthlyThreshold:int64<'u>;
-        ThresholdWarning:float32;
-        NotificationEmail:string;
-        NotificationSMS:string
-        }
-
-    type PooledPlanThresholdSettings<[<Measure>]'u> = {
-        DeviceCount: int;
-        BillableDays: int;
-        Commitment: int64<'u>;
-        DailyThreshold:float32;
-        MonthlyThreshold:float32;
         ThresholdWarning:float32;
         NotificationEmail:string;
         NotificationSMS:string
@@ -74,7 +41,7 @@ module ThresholdTypes =
         EnterpriseID:int;
         SIMType:SIMTypes;
     }
-    
+
     type Usage<[<Measure>]'u> = {
         MSISDN:string;
         IMSI:string;
@@ -117,4 +84,8 @@ module ThresholdTypes =
         MonthlyAlert:MonthlyAlert<'u>
         BillingStartDate:DateTime
     }
+
+
+
+
     type MonitorUsage<[<Measure>]'u> = ThresholdMonitor<'u> list -> Usage<'u> -> ThresholdMonitor<'u>

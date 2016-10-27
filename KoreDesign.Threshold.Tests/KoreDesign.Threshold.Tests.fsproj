@@ -56,6 +56,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ThresholdTests.fs" />
+    <Compile Include="ThresholdPooledPlanTests.fs" />
     <None Include="Script.fsx" />
     <None Include="packages.config" />
   </ItemGroup>

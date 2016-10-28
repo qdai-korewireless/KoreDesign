@@ -4,15 +4,30 @@ open System
 module ThresholdPooledPlanTypes =
 
     type PooledPlanThresholdSettings<[<Measure>]'u> = {
-        DeviceCount: int;
-        BillableDays: int;
-        Commitment: int64<'u>;
         DailyThreshold:float32;
         MonthlyThreshold:float32;
         ThresholdWarning:float32;
-        NotificationEmail:string;
-        NotificationSMS:string
         }
+
+    type PooledPlanAlert = {
+        AlertID:int
+        EnterpriseID:int
+        BillingStartDate:DateTime
+        AlertDate:DateTime
+        ThresholdInterval:ThresholdInterval
+        ThresholdType:ThresholdType
+    }
+    type PooledPlanThresholdMonitor<[<Measure>]'u> = {
+        UsageDate:DateTime;
+        SIMID:int;
+        UsageTotal:int64<'u>;
+        BillingStartDate:DateTime;
+        PooledPlanThresholdSettings:PooledPlanThresholdSettings<'u>;
+        ExceededThresholdType:ThresholdType option;
+        DailyAlert:PooledPlanAlert option;
+        EnterpriseID:int;
+        SIMType:SIMTypes;
+    }
 
     type PooledPlanThresholdUsage<[<Measure>]'u> = {
         MonthlyCommitment:int64<'u>
@@ -33,5 +48,12 @@ module ThresholdPooledPlanTypes =
         DailyUsage:int64<'u>
         UsageDate:DateTime
         CreatedDate:DateTime
+        PooledPlanThresholdUsage:PooledPlanThresholdUsage<'u>
+    }
+
+    type MonthlyPooledPlanThresholdUsageBySim<[<Measure>]'u> ={
+        SIMID:int
+        MonthlyUsage:int64<'u>
+        BillingDays:int
         PooledPlanThresholdUsage:PooledPlanThresholdUsage<'u>
     }

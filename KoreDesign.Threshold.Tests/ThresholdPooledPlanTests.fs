@@ -65,6 +65,7 @@ module ThresholdPooledPlanTests =
             PerDeviceCommitment = 1024L<data>
             TotalBillableDays = 30
             PooledPlanThresholdSettings = ppsetting
+            PoolLevelID = 5566
         }
         let dummyThresholdMonitor:PooledPlanThresholdMonitor<data> = {
             UsageDate = new DateTime(2016,10,7);
@@ -114,4 +115,13 @@ module ThresholdPooledPlanTests =
                 let monthlySIMs = [dummyMonthlySIM] in
                 
                 let actual = (ThresholdPooledPlan.poolThresholdMonthlyUpdateUsage monthlySIMs dailySIMs) |> Seq.head in
+               actual.MonthlyUsage |> should equal expected
+
+        [<Test>] member x.
+         ``should update monthly usage for Pooled Plan Threshold Usage`` ()=
+                let expected = 2048L<data> in
+                let pptus = [{dummyPPU with MonthlyUsage = 1024L<data>}] in
+                let monthlySIMs = [dummyMonthlySIM] in
+                
+                let actual = (ThresholdPooledPlan.updatePooledPlanThresholdMonthlyUsage pptus monthlySIMs) |> Seq.head in
                actual.MonthlyUsage |> should equal expected

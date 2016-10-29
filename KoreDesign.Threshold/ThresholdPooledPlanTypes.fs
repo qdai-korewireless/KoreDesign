@@ -41,6 +41,7 @@ module ThresholdPooledPlanTypes =
         PerDeviceCommitment:int64<'u>
         TotalBillableDays:int
         PooledPlanThresholdSettings:PooledPlanThresholdSettings<'u>
+        PoolLevelID:int
     }
 
     type DailyPooledPlanThresholdUsageBySim<[<Measure>]'u> ={

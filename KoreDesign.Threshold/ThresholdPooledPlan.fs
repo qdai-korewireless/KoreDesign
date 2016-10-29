@@ -44,3 +44,12 @@ module ThresholdPooledPlan =
             poolThresholdMonthlyUpdateUsage (newMPoolSIM::rem_mpoolSIMs) rem_poolSIMs
 
         |[] -> monthlyPoolSIMs
+
+    //update PooledPlanThresholdUsage monthly usage
+    let updatePooledPlanThresholdMonthlyUsage (pptus:PooledPlanThresholdUsage<'u> list) (monthlyPoolSIMs:MonthlyPooledPlanThresholdUsageBySim<'u> list) =
+        seq{ for pptu in pptus ->
+                let sum = monthlyPoolSIMs |> Seq.filter(fun s -> s.PooledPlanThresholdUsage.PoolLevelID = pptu.PoolLevelID) |> Seq.sumBy ( fun s -> s.MonthlyUsage)
+                {pptu with MonthlyUsage = pptu.MonthlyUsage + sum}
+            }
+
+        

@@ -169,3 +169,41 @@ module ThresholdPooledPlanTests =
                 
                 let actual = (ThresholdPooledPlan.insertPooledPlanDailyAlerts alerts dailySIMs monitors today) |> Seq.length in
                actual |> should equal expected
+
+        [<Test>] member x.
+         ``should insert monthly pooled plan alert when threshold exeed for the pool level on the month`` ()=
+                let expected = 1 in
+                let alerts = [] in
+                let monthlySIMs = [{dummyMonthlySIM with MonthlyUsage = 20481L<data>}] in
+                let monitors = [dummyThresholdMonitor] in
+                
+                let actual = (ThresholdPooledPlan.insertPooledPlanMonthlyAlerts alerts monthlySIMs monitors today) |> Seq.length in
+               actual |> should equal expected
+        [<Test>] member x.
+         ``should not insert monthly pooled plan alert when existing alert for the month exists`` ()=
+                let expected = 1 in
+                let alerts = [dummyAlert] in
+                let monthlySIMs = [{dummyMonthlySIM with MonthlyUsage = 2048L<data>}] in
+                let monitors = [dummyThresholdMonitor] in
+                
+                let actual = (ThresholdPooledPlan.insertPooledPlanMonthlyAlerts alerts monthlySIMs monitors today) |> Seq.length in
+               actual |> should equal expected
+        [<Test>] member x.
+         ``should insert monthly Warning pooled plan alert when only monthly warning is breached`` ()=
+                let expected = Warning in
+                let alerts = [] in
+                let monthlySIMs = [{dummyMonthlySIM with MonthlyUsage = 10200L<data>}] in
+                let monitors = [dummyThresholdMonitor] in
+                
+                let actual = (ThresholdPooledPlan.insertPooledPlanMonthlyAlerts alerts monthlySIMs monitors today) |> Seq.head in
+               actual.ThresholdType |> should equal expected
+
+        [<Test>] member x.
+         ``should not insert monthly pooled plan alert when no threshold is breached`` ()=
+                let expected = 0 in
+                let alerts = [] in
+                let monthlySIMs = [{dummyMonthlySIM with MonthlyUsage = 2L<data>}] in
+                let monitors = [dummyThresholdMonitor] in
+                
+                let actual = (ThresholdPooledPlan.insertPooledPlanMonthlyAlerts alerts monthlySIMs monitors today) |> Seq.length in
+               actual |> should equal expected

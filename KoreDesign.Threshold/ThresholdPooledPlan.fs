@@ -69,7 +69,7 @@ module ThresholdPooledPlan =
         |m::rem_monitors -> 
             let poolSIMs = dailyPoolSIMs |> Seq.filter (fun p -> m.UsageDate = p.CreatedDate && m.PooledPlanThresholdUsage.PoolLevelID = p.PooledPlanThresholdUsage.PoolLevelID)
             let poolDailyUsage = poolSIMs |> Seq.sumBy (fun s -> s.DailyUsage)
-            let thre = getExceededThresholdType m.PooledPlanThresholdUsage ThresholdInterval.Daily poolDailyUsage
+            let thre = getExceededThresholdType m.PooledPlanThresholdUsage Daily poolDailyUsage
             match thre with
             |Some t->
                 let alert = alerts|> Seq.tryFind (fun a -> a.AlertDate = today && a.PooledPlanThresholdUsage.PoolLevelID = m.PooledPlanThresholdUsage.PoolLevelID)
@@ -81,8 +81,33 @@ module ThresholdPooledPlan =
                                     |[]->1
                                     |_-> (alerts|> Seq.maxBy (fun a -> a.AlertID)).AlertID + 1
                                     
-                    let newDailyAlert:PooledPlanAlert<'u> = {AlertID = nextID; AlertDate=today;ThresholdInterval = ThresholdInterval.Daily;ThresholdType=t;PooledPlanThresholdUsage=m.PooledPlanThresholdUsage;AlertsToSend=1}
+                    let newDailyAlert:PooledPlanAlert<'u> = {AlertID = nextID; AlertDate=today;ThresholdInterval = Daily;ThresholdType=t;PooledPlanThresholdUsage=m.PooledPlanThresholdUsage;AlertsToSend=1}
                     insertPooledPlanDailyAlerts (newDailyAlert::alerts) dailyPoolSIMs rem_monitors today
             |None ->
                 insertPooledPlanDailyAlerts alerts dailyPoolSIMs rem_monitors today
+        |[] -> alerts
+
+     //insert monthly alert
+    let rec insertPooledPlanMonthlyAlerts (alerts:PooledPlanAlert<'u> list) (monthlyPoolSIMs:MonthlyPooledPlanThresholdUsageBySim<'u> list) (monitors:PooledPlanThresholdMonitor<'u> list) today=
+        match monitors with
+        |m::rem_monitors -> 
+            let poolSIMs = monthlyPoolSIMs |> Seq.filter (fun p -> m.PooledPlanThresholdUsage.PoolLevelID = p.PooledPlanThresholdUsage.PoolLevelID)
+            let poolMonthlyUsage = poolSIMs |> Seq.sumBy (fun s -> s.MonthlyUsage)
+            let thre = getExceededThresholdType m.PooledPlanThresholdUsage Monthly poolMonthlyUsage
+            match thre with
+            |Some t->
+                let alert = alerts|> Seq.tryFind (fun a -> a.AlertDate = today && a.PooledPlanThresholdUsage.PoolLevelID = m.PooledPlanThresholdUsage.PoolLevelID)
+                match alert with
+                |Some a -> 
+                    insertPooledPlanMonthlyAlerts alerts monthlyPoolSIMs rem_monitors today
+                |None -> 
+                    let fitleredAlerts = alerts |> Seq.filter (fun a -> a.ThresholdInterval = Monthly && a.ThresholdType = t) |> Seq.toList
+                    let nextID = match fitleredAlerts with
+                                    |[]-> 1 //todo: change ID to KORE ID formats
+                                    |_-> (alerts |> Seq.maxBy (fun a -> a.AlertID)).AlertID + 1
+                                    
+                    let newMonthlyAlert:PooledPlanAlert<'u> = {AlertID = nextID; AlertDate=today;ThresholdInterval = Monthly;ThresholdType=t;PooledPlanThresholdUsage=m.PooledPlanThresholdUsage;AlertsToSend=1}
+                    insertPooledPlanMonthlyAlerts (newMonthlyAlert::alerts) monthlyPoolSIMs rem_monitors today
+            |None ->
+                insertPooledPlanMonthlyAlerts alerts monthlyPoolSIMs rem_monitors today
         |[] -> alerts

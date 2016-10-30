@@ -103,7 +103,7 @@ module ThresholdPooledPlanTests =
                 let dailySIMs = [] in
                 let monitors = [dummyThresholdMonitor] in
                 
-                let actual = (ThresholdPooledPlan.poolThresholdDailyUpdateUsage dummyPPU dailySIMs monitors today) |> Seq.length in
+                let actual = (ThresholdPooledPlan.poolThresholdDailyUpdateUsage today dailySIMs monitors) |> Seq.length in
                actual |> should equal expected
         [<Test>] member x.
          ``should update daily pooled plan by SIM if exist`` ()=
@@ -111,7 +111,7 @@ module ThresholdPooledPlanTests =
                 let dailySIMs = [dummyDailySIM] in
                 let monitors = [dummyThresholdMonitor] in
                 
-                let actual = (ThresholdPooledPlan.poolThresholdDailyUpdateUsage dummyPPU dailySIMs monitors today) |> Seq.head in
+                let actual = (ThresholdPooledPlan.poolThresholdDailyUpdateUsage today dailySIMs monitors) |> Seq.head in
                actual.DailyUsage |> should equal expected
 
         [<Test>] member x.
@@ -138,7 +138,7 @@ module ThresholdPooledPlanTests =
                 let dailySIMs = [{dummyDailySIM with DailyUsage = 2048L<data>}] in
                 let monitors = [dummyThresholdMonitor] in
                 
-                let actual = (ThresholdPooledPlan.insertPooledPlanDailyAlerts alerts dailySIMs monitors today) |> Seq.length in
+                let actual = (ThresholdPooledPlan.insertPooledPlanDailyAlerts today alerts dailySIMs monitors) |> Seq.length in
                actual |> should equal expected
 
         [<Test>] member x.
@@ -148,7 +148,7 @@ module ThresholdPooledPlanTests =
                 let dailySIMs = [{dummyDailySIM with DailyUsage = 2048L<data>}] in
                 let monitors = [dummyThresholdMonitor] in
                 
-                let actual = (ThresholdPooledPlan.insertPooledPlanDailyAlerts alerts dailySIMs monitors today) |> Seq.length in
+                let actual = (ThresholdPooledPlan.insertPooledPlanDailyAlerts today alerts dailySIMs monitors) |> Seq.length in
                actual |> should equal expected
         [<Test>] member x.
          ``should insert daily Warning pooled plan alert when only daily warning is breached`` ()=
@@ -157,7 +157,7 @@ module ThresholdPooledPlanTests =
                 let dailySIMs = [dummyDailySIM] in
                 let monitors = [dummyThresholdMonitor] in
                 
-                let actual = (ThresholdPooledPlan.insertPooledPlanDailyAlerts alerts dailySIMs monitors today) |> Seq.head in
+                let actual = (ThresholdPooledPlan.insertPooledPlanDailyAlerts today alerts dailySIMs monitors) |> Seq.head in
                actual.ThresholdType |> should equal expected
 
         [<Test>] member x.
@@ -167,7 +167,7 @@ module ThresholdPooledPlanTests =
                 let dailySIMs = [{dummyDailySIM with DailyUsage = 2L<data>}] in
                 let monitors = [dummyThresholdMonitor] in
                 
-                let actual = (ThresholdPooledPlan.insertPooledPlanDailyAlerts alerts dailySIMs monitors today) |> Seq.length in
+                let actual = (ThresholdPooledPlan.insertPooledPlanDailyAlerts today alerts dailySIMs monitors) |> Seq.length in
                actual |> should equal expected
 
         [<Test>] member x.
@@ -177,7 +177,7 @@ module ThresholdPooledPlanTests =
                 let monthlySIMs = [{dummyMonthlySIM with MonthlyUsage = 20481L<data>}] in
                 let monitors = [dummyThresholdMonitor] in
                 
-                let actual = (ThresholdPooledPlan.insertPooledPlanMonthlyAlerts alerts monthlySIMs monitors today) |> Seq.length in
+                let actual = (ThresholdPooledPlan.insertPooledPlanMonthlyAlerts today alerts monthlySIMs monitors) |> Seq.length in
                actual |> should equal expected
         [<Test>] member x.
          ``should not insert monthly pooled plan alert when existing alert for the month exists`` ()=
@@ -186,7 +186,7 @@ module ThresholdPooledPlanTests =
                 let monthlySIMs = [{dummyMonthlySIM with MonthlyUsage = 2048L<data>}] in
                 let monitors = [dummyThresholdMonitor] in
                 
-                let actual = (ThresholdPooledPlan.insertPooledPlanMonthlyAlerts alerts monthlySIMs monitors today) |> Seq.length in
+                let actual = (ThresholdPooledPlan.insertPooledPlanMonthlyAlerts today alerts monthlySIMs monitors) |> Seq.length in
                actual |> should equal expected
         [<Test>] member x.
          ``should insert monthly Warning pooled plan alert when only monthly warning is breached`` ()=
@@ -195,7 +195,7 @@ module ThresholdPooledPlanTests =
                 let monthlySIMs = [{dummyMonthlySIM with MonthlyUsage = 10200L<data>}] in
                 let monitors = [dummyThresholdMonitor] in
                 
-                let actual = (ThresholdPooledPlan.insertPooledPlanMonthlyAlerts alerts monthlySIMs monitors today) |> Seq.head in
+                let actual = (ThresholdPooledPlan.insertPooledPlanMonthlyAlerts today alerts monthlySIMs monitors) |> Seq.head in
                actual.ThresholdType |> should equal expected
 
         [<Test>] member x.
@@ -205,5 +205,5 @@ module ThresholdPooledPlanTests =
                 let monthlySIMs = [{dummyMonthlySIM with MonthlyUsage = 2L<data>}] in
                 let monitors = [dummyThresholdMonitor] in
                 
-                let actual = (ThresholdPooledPlan.insertPooledPlanMonthlyAlerts alerts monthlySIMs monitors today) |> Seq.length in
+                let actual = (ThresholdPooledPlan.insertPooledPlanMonthlyAlerts today alerts monthlySIMs monitors) |> Seq.length in
                actual |> should equal expected

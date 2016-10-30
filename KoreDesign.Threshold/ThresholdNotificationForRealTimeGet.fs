@@ -17,3 +17,11 @@ module ThresholdNotificationForRealTimeGet =
                             |> Threshold.updateThresholdSummary []
                             |> Threshold.updateMonthlyAlert today []
         dailyAlerts,monthlyAlerts
+
+    let getPooledPlanNotifications today existingMonthlySIMs monitors =
+        
+        let dailyPoolSIMs = monitors |> ThresholdPooledPlan.poolThresholdDailyUpdateUsage today []
+        let monthlyPoolSIMs = dailyPoolSIMs |> ThresholdPooledPlan.poolThresholdMonthlyUpdateUsage existingMonthlySIMs
+        let dailyPPAlerts = monitors |> ThresholdPooledPlan.insertPooledPlanDailyAlerts today [] dailyPoolSIMs
+        let monthlyPPAlerts = monitors |> ThresholdPooledPlan.insertPooledPlanMonthlyAlerts today [] monthlyPoolSIMs
+        dailyPPAlerts @ monthlyPPAlerts

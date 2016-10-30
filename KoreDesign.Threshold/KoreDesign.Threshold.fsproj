@@ -48,6 +48,7 @@
     <Compile Include="ThresholdPooledPlanTypes.fs" />
     <Compile Include="Threshold.fs" />
     <Compile Include="ThresholdPooledPlan.fs" />
+    <Compile Include="ThresholdNotificationForRealTimeGet.fs" />
     <None Include="Script.fsx" />
   </ItemGroup>
   <PropertyGroup>

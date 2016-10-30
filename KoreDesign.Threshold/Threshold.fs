@@ -35,16 +35,9 @@ module Threshold =
             None
     
     //sprThresholdMonitoringUpdateUsage
-    let monitorUsage (monitors:ThresholdMonitor<'u> list) (usage:Usage<'u>) = 
+    let monitorUsage (perDeviceThresholdSettings:PerDeviceThresholdSettings<'u>) (monitors:ThresholdMonitor<'u> list) (usage:Usage<'u>) = 
         let zero = Int32WithMeasure 0
         let zero64 = Int64WithMeasure 0L
-        let perDeviceThresholdSettings:PerDeviceThresholdSettings<'u> = {
-                                                                        DailyThreshold = Int64WithMeasure 0L; 
-                                                                        MonthlyThreshold= Int64WithMeasure 0L;
-                                                                        ThresholdWarning = 0.5f;
-                                                                        NotificationEmail = "";
-                                                                        NotificationSMS = "";
-                                                                    }
         
         let monitor = monitors |> Seq.tryFind (fun m -> m.SIMID = usage.SIMID && m.UsageDate = usage.UsageDate)
         
@@ -75,14 +68,14 @@ module Threshold =
         let updated = seq {for m in monitors ->
                             let filtered = monitors |> Seq.filter (fun i -> i.UsageDate < m.UsageDate && i.SIMID = m.SIMID && i.BillingStartDate = m.BillingStartDate)
                             let total = filtered |> Seq.sumBy(fun i-> i.UsageTotal)
-                            {m with RunningTotal = m.UsageTotal + total}}
+                            {m with RunningTotal = m.UsageTotal + total}} |> Seq.toList
         updated
 
     //sprThresholdDateInsertNew
     let addUsageDate (tdates:ThresholdDate list) (monitors:ThresholdMonitor<'u> list) =
         let u1 = set tdates
         let u2:Set<ThresholdDate> = set (monitors |> Seq.map (fun m -> {EnterpriseID = m.EnterpriseID;SIMType=m.SIMType;UsageDate = m.UsageDate}))
-        Set.toSeq (u1 + u2)
+        Set.toList (u1 + u2)
 
     //sprThresholdDailyAlertsUpdate & sprThresholdDailyWarningAlertsUpdate
     let rec updateAlert (alerts:DailyAlert<'u> list) (monitors:ThresholdMonitor<'u> list) = 
@@ -113,7 +106,8 @@ module Threshold =
                                     |Some a -> {m with DailyAlert = Some a}
                                     |None -> m
                             }
-        newMonitors
+        newMonitors |> Seq.toList
+
     //sprThresholdSummaryMerge
     let rec updateThresholdSummary (summaries:ThresholdSummary<'u> list) (monitors:ThresholdMonitor<'u> list) =
         let zero = Int32WithMeasure 0
@@ -149,7 +143,7 @@ module Threshold =
         |[] -> summaries
 
     //sprThresholdMonthlyAlertInsertAndUpdate & sprThresholdMonthlyWarningInsertAndUpdate
-    let rec updateMonthlyAlert (alerts:MonthlyAlert<'u> list) (summaries:ThresholdSummary<'u> list) (today:DateTime) = 
+    let rec updateMonthlyAlert (today:DateTime) (alerts:MonthlyAlert<'u> list) (summaries:ThresholdSummary<'u> list) = 
         let one:int<'u> = Int32WithMeasure 1
         let exceededSummaries = summaries |> Seq.filter (fun m -> m.ExceededMonthlyThresholdType <> None) |> Seq.toList
         match exceededSummaries with
@@ -162,10 +156,10 @@ module Threshold =
             |Some a -> 
                 let rem_alerts = alerts |> Seq.filter (fun i -> i <> a) |>Seq.toList
                 let newAlert = {a with NumOfSIMs = a.NumOfSIMs + one}
-                updateMonthlyAlert (newAlert::rem_alerts) rem_summaries today
+                updateMonthlyAlert today (newAlert::rem_alerts) rem_summaries 
             |None -> 
                 let newAlert = {AlertDate = today;EnterpriseID = m.EnterpriseID; ThresholdType = m.ExceededMonthlyThresholdType.Value; AlertID = max+1;NumOfSIMs = one;BillingStartDate = m.BillingStartDate}
-                updateMonthlyAlert (newAlert::alerts) rem_summaries today
+                updateMonthlyAlert today (newAlert::alerts) rem_summaries 
         |[] -> alerts
     //sprThresholdMonthlyMonitoringInsert
     let rec insertThresholdMonthlyMonitor (monitors:ThresholdMonthlyMonitor<'u> list) (summaries:ThresholdSummary<'u> list) (alerts:MonthlyAlert<'u> list) (today:DateTime) =

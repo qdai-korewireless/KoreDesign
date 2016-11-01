@@ -21,10 +21,15 @@ module ThresholdNotificationForRealTimeGet =
     let getPerDeviceNotifications pdsetting today usages =
         getPerDeviceNotificationsRec pdsetting today usages [] [] [] []
 
+    let rec getPooledPlanNotificationsRec today monitors dailySIMs monthlySIMs alerts =
+        match monitors with
+        |monitor::rem_monitors -> 
+            let newDailySIMs = [monitor] |> ThresholdPooledPlan.poolThresholdDailyUpdateUsage today dailySIMs
+            let newMonthlySIMs = newDailySIMs |> ThresholdPooledPlan.poolThresholdMonthlyUpdateUsage monthlySIMs
+            let newDailyAlerts = [monitor] |> ThresholdPooledPlan.insertPooledPlanDailyAlerts today alerts newDailySIMs
+            let newMonthlyAlerts = [monitor] |> ThresholdPooledPlan.insertPooledPlanMonthlyAlerts today alerts newMonthlySIMs
+            getPooledPlanNotificationsRec today rem_monitors newDailySIMs newMonthlySIMs (newDailyAlerts @ newMonthlyAlerts)
+        |[] -> alerts
+
     let getPooledPlanNotifications today existingMonthlySIMs monitors =
-        
-        let dailyPoolSIMs = monitors |> ThresholdPooledPlan.poolThresholdDailyUpdateUsage today []
-        let monthlyPoolSIMs = dailyPoolSIMs |> ThresholdPooledPlan.poolThresholdMonthlyUpdateUsage existingMonthlySIMs
-        let dailyPPAlerts = monitors |> ThresholdPooledPlan.insertPooledPlanDailyAlerts today [] dailyPoolSIMs
-        let monthlyPPAlerts = monitors |> ThresholdPooledPlan.insertPooledPlanMonthlyAlerts today [] monthlyPoolSIMs
-        dailyPPAlerts @ monthlyPPAlerts
+        getPooledPlanNotificationsRec today monitors [] existingMonthlySIMs []

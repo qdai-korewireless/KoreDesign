@@ -34,30 +34,59 @@ module ThresholdNotificationForRealTimeGetTests =
         [<Test>] member x.
          ``should not get daily alert when threshold is not breached`` ()=
                 let expected = 0 in
-                let usage = {dummyUsage with Usage = 1L<data>} in
-                let actual = getPerDeviceNotifications pdsetting today usage |> fst in
+                let usages = [{dummyUsage with Usage = 1L<data>}] in
+                let actual = getPerDeviceNotifications pdsetting today usages |> fst in
                 actual.Length |> should equal expected
 
         [<Test>] member x.
          ``should get daily alert warning when warning threshold is breached`` ()=
                 let expected = Warning in
-                let usage = {dummyUsage with Usage = 1000L<data>} in
-                let actual = getPerDeviceNotifications pdsetting today usage |> fst in
+                let usages = [{dummyUsage with Usage = 1000L<data>}] in
+                let actual = getPerDeviceNotifications pdsetting today usages |> fst in
                 actual.Head.ThresholdType |> should equal expected
 
         [<Test>] member x.
          ``should get daily alert violation when violation threshold is breached`` ()=
                 let expected = Violation in
-                let usage = {dummyUsage with Usage = 2048L<data>} in
-                let actual = getPerDeviceNotifications pdsetting today usage |> fst in
+                let usages = [{dummyUsage with Usage = 2048L<data>}] in
+                let actual = getPerDeviceNotifications pdsetting today usages |> fst in
                 actual.Head.ThresholdType |> should equal expected
 
         [<Test>] member x.
          ``should get monthly alert violation when violation threshold is breached`` ()=
                 let expected = Violation in
-                let usage = {dummyUsage with Usage = 20480L<data>} in
-                let actual = getPerDeviceNotifications pdsetting today usage |> snd in
+                let usages = [{dummyUsage with Usage = 20480L<data>}] in
+                let actual = getPerDeviceNotifications pdsetting today usages |> snd in
                 actual.Head.ThresholdType |> should equal expected
+
+        [<Test>] member x.
+         ``should get one daily and one monthly alerts if both thresholds are breached`` ()=
+                let expected = 2 in
+                let usages = [{dummyUsage with Usage = 20480L<data>}] in
+                let actualDaily = getPerDeviceNotifications pdsetting today usages |> fst |> Seq.length in
+                let actualMonthly = getPerDeviceNotifications pdsetting today usages |> snd |> Seq.length in
+                (actualDaily + actualMonthly) |> should equal expected
+
+        [<Test>] member x.
+         ``should get at most one daily alert violation per day per company`` ()=
+                let expected = 1 in
+                let usages = [{dummyUsage with Usage = 2048L<data>};{dummyUsage with Usage = 2048L<data>}] in
+                let actual = getPerDeviceNotifications pdsetting today usages |> fst |> Seq.length in
+                actual |> should equal expected
+
+        [<Test>] member x.
+         ``should get at most one monthly alert violation per month per company`` ()=
+                let expected = 1 in
+                let usages = [{dummyUsage with Usage = 20480L<data>; UsageDate = new DateTime(2016,10,7)};{dummyUsage with Usage = 20480L<data>; UsageDate = new DateTime(2016,10,8)}] in
+                let actual = getPerDeviceNotifications pdsetting today usages |> snd |> Seq.length in
+                actual |> should equal expected
+        [<Test>] member x.
+         ``should get two alerts for two days of violation`` ()=
+                let expected = 2 in
+                let usages = [{dummyUsage with Usage = 2048L<data>; UsageDate = new DateTime(2016,10,7)};{dummyUsage with Usage = 20480L<data>;UsageDate = new DateTime(2016,10,8)}] in
+                let actual = getPerDeviceNotifications pdsetting today usages |> fst |> Seq.length in
+                actual |> should equal expected
+
 
    [<TestFixture>]
     type ``Given data usage for pooled plan`` ()=

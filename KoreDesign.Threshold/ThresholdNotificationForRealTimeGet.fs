@@ -4,19 +4,22 @@ open ThresholdTypes
 open ThresholdPooledPlanTypes
 
 module ThresholdNotificationForRealTimeGet = 
-    
-    let getPerDeviceNotifications pdsetting today usage =
 
-        let monitor = usage
-                    |> Threshold.monitorUsage pdsetting []
+    let rec getPerDeviceNotificationsRec pdsetting today usages monitors dailyAlerts summaries monthlyAlerts =
+        match usages with
+        |usage::rem_usages -> 
+            let newMonitors = usage |> Threshold.monitorUsage pdsetting monitors
+            let newDailyAlerts = newMonitors
+                                |> Threshold.calculateRunningTotals 
+                                |> Threshold.updateAlert dailyAlerts
+            let newMonthlyAlerts = newMonitors |> Threshold.updateThresholdSummary summaries
+            let newSummaries = newMonitors |> Threshold.updateThresholdSummary summaries
+            let newMonthlyAlerts = newSummaries|> Threshold.updateMonthlyAlert today monthlyAlerts
+            getPerDeviceNotificationsRec pdsetting today rem_usages newMonitors newDailyAlerts newSummaries newMonthlyAlerts
+        |[] -> (dailyAlerts,monthlyAlerts)
 
-        let dailyAlerts = monitor
-                        |> Threshold.calculateRunningTotals 
-                        |> Threshold.updateAlert []
-        let monthlyAlerts = monitor
-                            |> Threshold.updateThresholdSummary []
-                            |> Threshold.updateMonthlyAlert today []
-        dailyAlerts,monthlyAlerts
+    let getPerDeviceNotifications pdsetting today usages =
+        getPerDeviceNotificationsRec pdsetting today usages [] [] [] []
 
     let getPooledPlanNotifications today existingMonthlySIMs monitors =
         

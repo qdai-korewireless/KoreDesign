@@ -13,7 +13,6 @@ module ThresholdNotificationForRealTimeGetTests =
 
    [<TestFixture>]
     type ``Given data usage for per device`` ()=
-        let today = new DateTime(2016,10,7)
 
         let dummyUsage = {
             MSISDN = "734074328544284";
@@ -35,62 +34,62 @@ module ThresholdNotificationForRealTimeGetTests =
          ``should not get daily alert when threshold is not breached`` ()=
                 let expected = 0 in
                 let usages = [{dummyUsage with Usage = 1L<data>}] in
-                let actual = getPerDeviceNotifications pdsetting today usages |> fst in
+                let actual = getPerDeviceNotifications pdsetting usages |> fst in
                 actual.Length |> should equal expected
 
         [<Test>] member x.
          ``should get daily alert warning when warning threshold is breached`` ()=
                 let expected = Warning in
                 let usages = [{dummyUsage with Usage = 1000L<data>}] in
-                let actual = getPerDeviceNotifications pdsetting today usages |> fst in
+                let actual = getPerDeviceNotifications pdsetting usages |> fst in
                 actual.Head.ThresholdType |> should equal expected
 
         [<Test>] member x.
          ``should get daily alert violation when violation threshold is breached`` ()=
                 let expected = Violation in
                 let usages = [{dummyUsage with Usage = 2048L<data>}] in
-                let actual = getPerDeviceNotifications pdsetting today usages |> fst in
+                let actual = getPerDeviceNotifications pdsetting usages |> fst in
                 actual.Head.ThresholdType |> should equal expected
 
         [<Test>] member x.
          ``should get monthly alert violation when violation threshold is breached`` ()=
                 let expected = Violation in
                 let usages = [{dummyUsage with Usage = 20480L<data>}] in
-                let actual = getPerDeviceNotifications pdsetting today usages |> snd in
+                let actual = getPerDeviceNotifications pdsetting usages |> snd in
                 actual.Head.ThresholdType |> should equal expected
 
         [<Test>] member x.
          ``should get one daily and one monthly alerts if both thresholds are breached`` ()=
                 let expected = 2 in
                 let usages = [{dummyUsage with Usage = 20480L<data>}] in
-                let actualDaily = getPerDeviceNotifications pdsetting today usages |> fst |> Seq.length in
-                let actualMonthly = getPerDeviceNotifications pdsetting today usages |> snd |> Seq.length in
+                let actualDaily = getPerDeviceNotifications pdsetting usages |> fst |> Seq.length in
+                let actualMonthly = getPerDeviceNotifications pdsetting usages |> snd |> Seq.length in
                 (actualDaily + actualMonthly) |> should equal expected
 
         [<Test>] member x.
          ``should get at most one daily alert violation per day per company`` ()=
                 let expected = 1 in
                 let usages = [{dummyUsage with Usage = 2048L<data>};{dummyUsage with Usage = 2048L<data>}] in
-                let actual = getPerDeviceNotifications pdsetting today usages |> fst |> Seq.length in
+                let actual = getPerDeviceNotifications pdsetting usages |> fst |> Seq.length in
                 actual |> should equal expected
 
         [<Test>] member x.
          ``should get at most one monthly alert violation per month per company`` ()=
                 let expected = 1 in
                 let usages = [{dummyUsage with Usage = 20480L<data>; UsageDate = new DateTime(2016,10,7)};{dummyUsage with Usage = 20480L<data>; UsageDate = new DateTime(2016,10,8)}] in
-                let actual = getPerDeviceNotifications pdsetting today usages |> snd |> Seq.length in
+                let actual = getPerDeviceNotifications pdsetting usages |> snd |> Seq.length in
                 actual |> should equal expected
         [<Test>] member x.
          ``should get two alerts for two days of violation`` ()=
                 let expected = 2 in
                 let usages = [{dummyUsage with Usage = 2048L<data>; UsageDate = new DateTime(2016,10,7)};{dummyUsage with Usage = 20480L<data>;UsageDate = new DateTime(2016,10,8)}] in
-                let actual = getPerDeviceNotifications pdsetting today usages |> fst |> Seq.length in
+                let actual = getPerDeviceNotifications pdsetting usages |> fst |> Seq.length in
                 actual |> should equal expected
 
 
    [<TestFixture>]
     type ``Given data usage for pooled plan`` ()=
-        let today = new DateTime(2016,10,7)
+
         let ppsetting:PooledPlanThresholdSettings<data> = {
             DailyThreshold = 0.5f;
             MonthlyThreshold = 0.5f;
@@ -130,7 +129,7 @@ module ThresholdNotificationForRealTimeGetTests =
                 let expected = 0 in
                 let usage = [{dummyThresholdMonitor with UsageTotal = 1L<data>}] in
                 let monthSIMs = [dummyMonthlySIM] in
-                let actual = getPooledPlanNotifications today monthSIMs usage |> Seq.length in
+                let actual = getPooledPlanNotifications monthSIMs usage |> Seq.length in
                 actual |> should equal expected
 
         [<Test>] member x.
@@ -138,7 +137,7 @@ module ThresholdNotificationForRealTimeGetTests =
                 let expected = Warning in
                 let usage = [{dummyThresholdMonitor with UsageTotal = 1024L<data>}] in
                 let monthSIMs = [dummyMonthlySIM] in
-                let actual = getPooledPlanNotifications today monthSIMs usage |> Seq.head in
+                let actual = getPooledPlanNotifications monthSIMs usage |> Seq.head in
                 actual.ThresholdType |> should equal expected
 
         [<Test>] member x.
@@ -146,5 +145,28 @@ module ThresholdNotificationForRealTimeGetTests =
                 let expected = Violation in
                 let usage = [{dummyThresholdMonitor with UsageTotal = 10240L<data>}] in
                 let monthSIMs = [dummyMonthlySIM] in
-                let actual = getPooledPlanNotifications today monthSIMs usage |> Seq.head in
+                let actual = getPooledPlanNotifications monthSIMs usage |> Seq.head in
                 actual.ThresholdType |> should equal expected
+
+        [<Test>] member x.
+         ``should get at most one daily alert violation per day per company`` ()=
+                let expected = 1 in
+                let usages = [{dummyThresholdMonitor with UsageTotal = 2048L<data>};{dummyThresholdMonitor with UsageTotal = 2048L<data>}] in
+                let monthSIMs = [dummyMonthlySIM] in
+                let actual = getPooledPlanNotifications monthSIMs usages |> Seq.filter (fun a -> a.ThresholdInterval = Daily) |> Seq.length in
+                actual |> should equal expected
+
+        [<Test>] member x.
+         ``should get at most one monthly alert violation per month per company`` ()=
+                let expected = 1 in
+                let usages = [{dummyThresholdMonitor with UsageTotal = 20480L<data>};{dummyThresholdMonitor with UsageTotal = 20480L<data>; UsageDate = new DateTime(2016,10,8)}] in
+                let monthSIMs = [dummyMonthlySIM] in
+                let actual = getPooledPlanNotifications monthSIMs usages |> Seq.filter( fun a-> a.ThresholdInterval = Monthly) |> Seq.length in
+                actual |> should equal expected
+        [<Test>] member x.
+         ``should get two alerts for two days of violation`` ()=
+                let expected = 2 in
+                let usages = [{dummyThresholdMonitor with UsageTotal = 2048L<data>; UsageDate = new DateTime(2016,10,7)};{dummyThresholdMonitor with UsageTotal = 20480L<data>;UsageDate = new DateTime(2016,10,8)}] in
+                let monthSIMs = [dummyMonthlySIM] in
+                let actual = getPooledPlanNotifications monthSIMs usages |> Seq.filter( fun a-> a.ThresholdInterval = Daily) |> Seq.length in
+                actual |> should equal expected

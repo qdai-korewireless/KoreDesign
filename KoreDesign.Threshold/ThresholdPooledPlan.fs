@@ -96,7 +96,7 @@ module ThresholdPooledPlan =
             let thre = getExceededThresholdType m.PooledPlanThresholdUsage Monthly poolMonthlyUsage
             match thre with
             |Some t->
-                let alert = alerts|> Seq.tryFind (fun a -> a.AlertDate = today && a.PooledPlanThresholdUsage.PoolLevelID = m.PooledPlanThresholdUsage.PoolLevelID)
+                let alert = alerts|> Seq.tryFind (fun a -> a.PooledPlanThresholdUsage.PoolLevelID = m.PooledPlanThresholdUsage.PoolLevelID && a.ThresholdInterval = Monthly)
                 match alert with
                 |Some a -> 
                     insertPooledPlanMonthlyAlerts today alerts monthlyPoolSIMs rem_monitors 

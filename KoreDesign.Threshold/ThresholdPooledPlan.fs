@@ -67,19 +67,24 @@ module ThresholdPooledPlan =
     let rec insertPooledPlanDailyAlerts today (alerts:PooledPlanAlert<'u> list) (dailyPoolSIMs:DailyPooledPlanThresholdUsageBySim<'u> list) (monitors:PooledPlanThresholdMonitor<'u> list) =
         match monitors with
         |m::rem_monitors -> 
-            let poolSIMs = dailyPoolSIMs |> Seq.filter (fun p -> m.UsageDate = p.CreatedDate && m.PooledPlanThresholdUsage.PoolLevelID = p.PooledPlanThresholdUsage.PoolLevelID)
+            let poolSIMs = dailyPoolSIMs |> Seq.filter (fun p -> p.CreatedDate = today && m.PooledPlanThresholdUsage.PoolLevelID = p.PooledPlanThresholdUsage.PoolLevelID)
             let poolDailyUsage = poolSIMs |> Seq.sumBy (fun s -> s.DailyUsage)
             let thre = getExceededThresholdType m.PooledPlanThresholdUsage Daily poolDailyUsage
             match thre with
             |Some t->
-                let alert = alerts|> Seq.tryFind (fun a -> a.AlertDate = today && a.PooledPlanThresholdUsage.PoolLevelID = m.PooledPlanThresholdUsage.PoolLevelID)
+                let alert = alerts|> Seq.tryFind (fun a -> a.AlertDate = today && a.PooledPlanThresholdUsage.PoolLevelID = m.PooledPlanThresholdUsage.PoolLevelID && a.ThresholdInterval = Daily)
                 match alert with
                 |Some a -> 
                     insertPooledPlanDailyAlerts today alerts dailyPoolSIMs rem_monitors 
                 |None -> 
                     let nextID = match alerts with
                                     |[]->1
-                                    |_-> (alerts|> Seq.maxBy (fun a -> a.AlertID)).AlertID + 1
+                                    |_->
+                                        let todayAlert = alerts|> Seq.tryFind (fun a -> a.AlertDate = today && a.ThresholdInterval = Daily && a.PooledPlanThresholdUsage.EnterpriseID = m.PooledPlanThresholdUsage.EnterpriseID) 
+                                        match todayAlert with
+                                        |Some a -> a.AlertID
+                                        |None -> (alerts|> Seq.maxBy (fun a -> a.AlertID)).AlertID + 1
+                                        
                                     
                     let newDailyAlert:PooledPlanAlert<'u> = {AlertID = nextID; AlertDate=today;ThresholdInterval = Daily;ThresholdType=t;PooledPlanThresholdUsage=m.PooledPlanThresholdUsage;AlertsToSend=1}
                     insertPooledPlanDailyAlerts today (newDailyAlert::alerts) dailyPoolSIMs rem_monitors 

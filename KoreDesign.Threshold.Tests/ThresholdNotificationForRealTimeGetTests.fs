@@ -181,3 +181,16 @@ module ThresholdNotificationForRealTimeGetTests =
                 let monthSIMs = [dummyMonthlySIM;dummyMonthlySIM2] in
                 let actual = getPooledPlanNotifications monthSIMs usages |> Seq.filter( fun a-> a.ThresholdInterval = Daily) |> Seq.length in
                 actual |> should equal expected
+
+        [<Test>] member x.
+         ``should get same alert ID for different pool levels of violation on same day`` ()=
+                let expected = true in
+                let dummyPPU2 = {dummyPPU with PoolLevelID = 5567} in
+                let dummyMonthlySIM2 = {dummyMonthlySIM with PooledPlanThresholdUsage = dummyPPU2} in
+                let dummyThresholdMonitor2 = {dummyThresholdMonitor with PooledPlanThresholdUsage = dummyPPU2} in
+                let usages = [{dummyThresholdMonitor with UsageTotal = 2048L<data>};{dummyThresholdMonitor2 with UsageTotal = 2048L<data>}] in
+                let monthSIMs = [dummyMonthlySIM;dummyMonthlySIM2] in
+                let results = getPooledPlanNotifications monthSIMs usages |> Seq.filter( fun a-> a.ThresholdInterval = Daily)  in
+                let actual1 = results |> Seq.head in
+                let actual2 = results |> Seq.last in
+                (actual1.AlertID = actual2.AlertID) |> should equal expected

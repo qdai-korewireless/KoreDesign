@@ -8,6 +8,7 @@ open LanguagePrimitives
 open ThresholdTypes
 open ThresholdPooledPlanTypes
 open ThresholdNotificationForRealTimeGet
+open KoreDesign.Data
 
 module ThresholdNotificationForRealTimeGetTests =
 
@@ -194,3 +195,19 @@ module ThresholdNotificationForRealTimeGetTests =
                 let actual1 = results |> Seq.head in
                 let actual2 = results |> Seq.last in
                 (actual1.AlertID = actual2.AlertID) |> should equal expected
+        [<Test>] member x.
+         ``Simple data testing with FE DB`` ()=
+            let expected = 0 in
+            let objs = ThresholdData.getThresholdMonitor 500 (new DateTime(2013,8,20)) in
+            let dataSettings:PerDeviceThresholdSettings<data> = {
+                DailyThreshold = 100L<data>;
+                MonthlyThreshold = 100L<data>;
+                ThresholdWarning = 0.5f;
+                NotificationEmail = "test@test.come";
+                NotificationSMS = "2041234567"} in
+            let data:ThresholdMonitor<data> list = objs |> Seq.map (fun r -> {UsageDate = r.UsageDate.Value;SIMID=r.SIMID.Value;UsageTotal=Int64WithMeasure r.GPRSTotal.Value;BillingStartDate = r.BillingCDRStartDate.Value;PerDeviceThresholdSettings = dataSettings;ExceededThresholdType = None;DailyAlert=None;RunningTotal=Int64WithMeasure r.GPRSRunningTotal.Value;EnterpriseID=r.EnterpriseId.Value;SIMType=Proximus}) |> Seq.toList in
+            let actual = data |> Seq.length in
+
+            actual |> should greaterThan expected
+
+                

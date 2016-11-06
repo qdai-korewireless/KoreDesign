@@ -37,6 +37,10 @@
       <HintPath>..\packages\FSharp.Core.3.1.2.5\lib\net40\FSharp.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="FSharp.Data.SqlClient">
+      <HintPath>..\packages\FSharp.Data.SqlClient.1.8.2\lib\net40\FSharp.Data.SqlClient.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="FsUnit.NUnit">
       <HintPath>..\packages\FsUnit.1.4.1.0\lib\net45\FsUnit.NUnit.dll</HintPath>
       <Private>True</Private>
@@ -52,7 +56,9 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Data" />
     <Reference Include="System.Numerics" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ThresholdTests.fs" />
@@ -60,8 +66,14 @@
     <Compile Include="ThresholdNotificationForRealTimeGetTests.fs" />
     <None Include="Script.fsx" />
     <None Include="packages.config" />
+    <None Include="app.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\KoreDesign.Data\KoreDesign.Data.fsproj">
+      <Name>KoreDesign.Data</Name>
+      <Project>{02b97938-2127-45d0-9ebf-572923373b06}</Project>
+      <Private>True</Private>
+    </ProjectReference>
     <ProjectReference Include="..\KoreDesign.Threshold\KoreDesign.Threshold.fsproj">
       <Name>KoreDesign.Threshold</Name>
       <Project>{a18a6300-5912-41b8-ac0b-fbfb06fe78f7}</Project>

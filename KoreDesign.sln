@@ -9,6 +9,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "KoreDesign.Threshold", "Kor
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "KoreDesign.Threshold.Tests", "KoreDesign.Threshold.Tests\KoreDesign.Threshold.Tests.fsproj", "{438B9687-D624-4E39-95D6-CEEF059587FF}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "KoreDesign.Data", "KoreDesign.Data\KoreDesign.Data.fsproj", "{02B97938-2127-45D0-9EBF-572923373B06}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{438B9687-D624-4E39-95D6-CEEF059587FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{438B9687-D624-4E39-95D6-CEEF059587FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{438B9687-D624-4E39-95D6-CEEF059587FF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{02B97938-2127-45D0-9EBF-572923373B06}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{02B97938-2127-45D0-9EBF-572923373B06}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{02B97938-2127-45D0-9EBF-572923373B06}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{02B97938-2127-45D0-9EBF-572923373B06}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

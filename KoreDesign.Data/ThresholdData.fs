@@ -14,3 +14,7 @@ module ThresholdData =
 
         cmd.Execute(simID = simId, usageDate = usageDate)
         
+    let updateThresholdMonitor simId usageDate usage =
+        use cmd = new SqlCommandProvider<"
+            update tbl_sim_threshold_monitoring set GPRSTotal = @usage where simId = @simID and usageDate = @usageDate",connectionString>(connectionString)
+        cmd.Execute(usage,simId,usageDate)

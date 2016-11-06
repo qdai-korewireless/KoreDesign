@@ -196,7 +196,7 @@ module ThresholdNotificationForRealTimeGetTests =
                 let actual2 = results |> Seq.last in
                 (actual1.AlertID = actual2.AlertID) |> should equal expected
         [<Test>] member x.
-         ``Simple data testing with FE DB`` ()=
+         ``Simple data testing selection with FE DB`` ()=
             let expected = 0 in
             let objs = ThresholdData.getThresholdMonitor 500 (new DateTime(2013,8,20)) in
             let dataSettings:PerDeviceThresholdSettings<data> = {
@@ -209,5 +209,11 @@ module ThresholdNotificationForRealTimeGetTests =
             let actual = data |> Seq.length in
 
             actual |> should greaterThan expected
+
+        [<Test>] member x.
+         ``Simple data testing update with FE DB`` ()=
+            let expected = 1 in
+            let actual = ThresholdData.updateThresholdMonitor 500 (new DateTime(2013,8,20)) 999L in
+            actual |> should equal expected
 
                 
